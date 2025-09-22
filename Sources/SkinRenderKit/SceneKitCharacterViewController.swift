@@ -3,7 +3,6 @@
 //  SkinRender
 //
 
-import Cocoa
 import SceneKit
 
 public class SceneKitCharacterViewController: NSViewController {
@@ -13,7 +12,7 @@ public class SceneKitCharacterViewController: NSViewController {
 
   // MARK: - Texture Settings
 
-  private var texturePath: String?
+  private var skinTexturePath: String?
   private var skinImage: NSImage?
 
   // MARK: - Cape Texture Settings
@@ -21,16 +20,15 @@ public class SceneKitCharacterViewController: NSViewController {
   private var capeTexturePath: String?
   private var capeImage: NSImage?
 
-  // Player model type
   private var playerModel: PlayerModel = .steve
 
-  // Rotation animation settings
+  /// The time required for one complete rotation
   private var rotationDuration: TimeInterval = 15.0
 
-  // Background color settings
+  /// Scene background color settings
   private var backgroundColor: NSColor = .gray
 
-  // UI control settings
+  /// UI control settings
   private var debugMode: Bool = false
 
   // Limb bottom-face flip configuration
@@ -45,11 +43,12 @@ public class SceneKitCharacterViewController: NSViewController {
   public var headBodyBottomFlipMode: LimbBottomFlipMode = .horizontal
   public var headBodyBottomRotate180: Bool = true
 
-  // Character body part nodes
+  // MARK: - Character body part nodes
   private var characterGroup: SCNNode!
   private var headNode: SCNNode!
   private var hatNode: SCNNode!
-  private var headGroupNode: SCNNode! // Group for head + hat to sync movement
+  /// Group for head + hat to sync movement
+  private var headGroupNode: SCNNode!
   private var bodyNode: SCNNode!
   private var jacketNode: SCNNode!
   private var rightArmNode: SCNNode!
@@ -66,7 +65,8 @@ public class SceneKitCharacterViewController: NSViewController {
   private var rightLegGroupNode: SCNNode!
   private var leftLegGroupNode: SCNNode!
   private var capeNode: SCNNode!
-  private var capePivotNode: SCNNode! // Pivot for cape rotation/attachment
+  /// Pivot for cape rotation/attachment
+  private var capePivotNode: SCNNode!
 
   // Outer layer display control
   private var showOuterLayers: Bool = true
@@ -126,116 +126,6 @@ public class SceneKitCharacterViewController: NSViewController {
     modelTypeButton.autoresizingMask = [.maxXMargin, .maxYMargin]
     return modelTypeButton
   }()
-
-  // Convenience initializer
-  public convenience init(
-    texturePath: String,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.texturePath = texturePath
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-    loadTexture()
-  }
-
-  // Convenience initializer with cape texture path
-  public convenience init(
-    texturePath: String,
-    capeTexturePath: String? = nil,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.texturePath = texturePath
-    self.capeTexturePath = capeTexturePath
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-    loadTexture()
-    if let capeTexturePath = capeTexturePath {
-      loadCapeTexture(from: capeTexturePath)
-    }
-  }
-
-  // Convenience initializer with only model type
-  public convenience init(
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-  }
-
-  // Convenience initializer with NSImage texture
-  public convenience init(
-    skinImage: NSImage,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.skinImage = skinImage
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-    // No need to call loadTexture() since we already have the image
-  }
-
-  // Convenience initializer with NSImage textures including cape
-  public convenience init(
-    skinImage: NSImage,
-    capeImage: NSImage? = nil,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.skinImage = skinImage
-    self.capeImage = capeImage
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-    // No need to call loadTexture() since we already have the images
-  }
-
-  // Convenience initializer with mixed texture inputs
-  public convenience init(
-    texturePath: String? = nil,
-    capeImage: NSImage,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
-    debugMode: Bool = false
-  ) {
-    self.init()
-    self.texturePath = texturePath
-    self.capeImage = capeImage
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.debugMode = debugMode
-    if texturePath != nil {
-      loadTexture()
-    }
-  }
 
   public override func loadView() {
     scnView = SCNView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
@@ -373,7 +263,7 @@ extension SceneKitCharacterViewController {
 extension SceneKitCharacterViewController {
 
   private func loadTexture() {
-    guard let texturePath = texturePath else { return }
+    guard let texturePath = skinTexturePath else { return }
 
     if let image = NSImage(contentsOfFile: texturePath) {
       self.skinImage = image
@@ -412,7 +302,7 @@ extension SceneKitCharacterViewController {
 extension SceneKitCharacterViewController {
 
   public func updateTexture(path: String) {
-    self.texturePath = path
+    self.skinTexturePath = path
     loadTexture()
 
     // Recreate character to apply new texture
@@ -424,7 +314,7 @@ extension SceneKitCharacterViewController {
 
   public func updateTexture(image: NSImage) {
     self.skinImage = image
-    self.texturePath = nil
+    self.skinTexturePath = nil
 
     // Recreate character to apply new texture
     characterGroup?.removeFromParentNode()
@@ -1398,6 +1288,121 @@ extension SceneKitCharacterViewController {
     window.title = "SceneKit Minecraft Character - \(playerModel.displayName)"
     window.contentViewController = characterVC
     window.makeKeyAndOrderFront(nil)
+  }
+}
+
+// MARK: - Convenience Initialization
+
+extension SceneKitCharacterViewController {
+
+  // Convenience initializer
+  public convenience init(
+    texturePath: String,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.skinTexturePath = texturePath
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+    loadTexture()
+  }
+
+  // Convenience initializer with cape texture path
+  public convenience init(
+    texturePath: String,
+    capeTexturePath: String? = nil,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.skinTexturePath = texturePath
+    self.capeTexturePath = capeTexturePath
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+    loadTexture()
+    if let capeTexturePath = capeTexturePath {
+      loadCapeTexture(from: capeTexturePath)
+    }
+  }
+
+  // Convenience initializer with only model type
+  public convenience init(
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+  }
+
+  // Convenience initializer with NSImage texture
+  public convenience init(
+    skinImage: NSImage,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.skinImage = skinImage
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+    // No need to call loadTexture() since we already have the image
+  }
+
+  // Convenience initializer with NSImage textures including cape
+  public convenience init(
+    skinImage: NSImage,
+    capeImage: NSImage? = nil,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.skinImage = skinImage
+    self.capeImage = capeImage
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+    // No need to call loadTexture() since we already have the images
+  }
+
+  // Convenience initializer with mixed texture inputs
+  public convenience init(
+    texturePath: String? = nil,
+    capeImage: NSImage,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.init()
+    self.skinTexturePath = texturePath
+    self.capeImage = capeImage
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+    if texturePath != nil {
+      loadTexture()
+    }
   }
 }
 
