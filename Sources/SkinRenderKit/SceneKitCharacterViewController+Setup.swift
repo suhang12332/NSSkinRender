@@ -10,13 +10,16 @@ extension SceneKitCharacterViewController {
   func setupScene() {
     scene = SCNScene()
     scnView.scene = scene
+    scnView.allowsCameraControl = true
+    scnView.backgroundColor = backgroundColor
+    scnView.showsStatistics = debugMode
   }
 
   func setupCamera() {
     let cameraNode = SCNNode()
     cameraNode.camera = SCNCamera()
-    cameraNode.position = SCNVector3(0, 30, 30)
-    cameraNode.look(at: SCNVector3(0, 10, 0))
+    cameraNode.position = SCNVector3(0, 16, 36)
+    cameraNode.look(at: SCNVector3(0, 6, 0))
     scene.rootNode.addChildNode(cameraNode)
   }
 

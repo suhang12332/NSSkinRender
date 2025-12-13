@@ -137,9 +137,6 @@ public class SceneKitCharacterViewController: NSViewController {
     setupLighting()
     setupUI()
     setupGestureRecognizers()
-
-    scnView.allowsCameraControl = true
-    scnView.backgroundColor = backgroundColor
   }
 
   // MARK: - Character Building
