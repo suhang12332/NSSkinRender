@@ -7,6 +7,13 @@
 
 import SceneKit
 
+/// Container for elytra node hierarchy
+struct ElytraNodes {
+  let pivot: SCNNode
+  let leftWing: SCNNode
+  let rightWing: SCNNode
+}
+
 extension CharacterNodeBuilder {
 
   // MARK: - Elytra
@@ -15,11 +22,11 @@ extension CharacterNodeBuilder {
   /// - Parameters:
   ///   - elytraImage: The elytra texture image (64x32)
   ///   - parent: The parent node to attach the elytra to
-  /// - Returns: Tuple containing the pivot node and left/right wing nodes
+  /// - Returns: ElytraNodes containing the pivot node and left/right wing nodes
   func buildElytra(
     elytraImage: NSImage,
     parent: SCNNode
-  ) -> (pivot: SCNNode, leftWing: SCNNode, rightWing: SCNNode) {
+  ) -> ElytraNodes {
     // Pivot node at upper back (shoulder line, same position as cape)
     let elytraPivotNode = SCNNode()
     elytraPivotNode.name = "ElytraPivot"
@@ -77,6 +84,10 @@ extension CharacterNodeBuilder {
     elytraPivotNode.addChildNode(rightWingNode)
     parent.addChildNode(elytraPivotNode)
 
-    return (elytraPivotNode, leftWingNode, rightWingNode)
+    return ElytraNodes(
+      pivot: elytraPivotNode,
+      leftWing: leftWingNode,
+      rightWing: rightWingNode
+    )
   }
 }

@@ -178,8 +178,8 @@ public enum TextureProcessor {
       case .vertical:
         return flipVertically(image) ?? image
       case .both:
-        let h = flipHorizontally(image) ?? image
-        return flipVertically(h) ?? h
+        let horizontal = flipHorizontally(image) ?? image
+        return flipVertically(horizontal) ?? horizontal
       }
     }()
 

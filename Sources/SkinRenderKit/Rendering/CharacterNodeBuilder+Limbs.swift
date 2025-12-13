@@ -20,6 +20,12 @@ extension CharacterNodeBuilder {
     let leftOverlay: SCNNode
   }
 
+  private struct SingleArmNodes {
+    let group: SCNNode
+    let base: SCNNode
+    let overlay: SCNNode
+  }
+
   func buildArms(
     skinImage: NSImage,
     playerModel: PlayerModel,
@@ -29,93 +35,91 @@ extension CharacterNodeBuilder {
     let armSleeveDimensions = playerModel.armSleeveDimensions
     let armPositions = playerModel.armPositions
 
-    // Right arm group (pivot at shoulder)
-    let rightArmGroup = SCNNode()
-    rightArmGroup.name = "RightArmGroup"
-    rightArmGroup.position = SCNVector3(
-      CGFloat(armPositions.right.x),
-      CGFloat(armPositions.right.y) + armDimensions.height / 2,
-      CGFloat(armPositions.right.z)
+    let rightArm = buildSingleArm(
+      skinImage: skinImage,
+      isLeft: false,
+      armDimensions: armDimensions,
+      sleeveDimensions: armSleeveDimensions,
+      position: armPositions.right,
+      playerModel: playerModel,
+      parent: parent
     )
-    parent.addChildNode(rightArmGroup)
 
-    // Right arm base
-    let rightArmGeometry = SCNBox(
-      width: armDimensions.width,
-      height: armDimensions.height,
-      length: armDimensions.length,
-      chamferRadius: 0
+    let leftArm = buildSingleArm(
+      skinImage: skinImage,
+      isLeft: true,
+      armDimensions: armDimensions,
+      sleeveDimensions: armSleeveDimensions,
+      position: armPositions.left,
+      playerModel: playerModel,
+      parent: parent
     )
-    rightArmGeometry.materials = materialFactory.createArmMaterials(
-      from: skinImage, isLeft: false, isSleeve: false, playerModel: playerModel
-    )
-    let rightArmNode = SCNNode(geometry: rightArmGeometry)
-    rightArmNode.name = "RightArm"
-    rightArmNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
-    rightArmGroup.addChildNode(rightArmNode)
-
-    // Right arm sleeve
-    let rightSleeveGeometry = SCNBox(
-      width: armSleeveDimensions.width,
-      height: armSleeveDimensions.height,
-      length: armSleeveDimensions.length,
-      chamferRadius: 0
-    )
-    rightSleeveGeometry.materials = materialFactory.createArmMaterials(
-      from: skinImage, isLeft: false, isSleeve: true, playerModel: playerModel
-    )
-    let rightArmSleeveNode = SCNNode(geometry: rightSleeveGeometry)
-    rightArmSleeveNode.name = "RightArmSleeve"
-    rightArmSleeveNode.position = SCNVector3(0, -Float(armSleeveDimensions.height / 2), 0)
-    rightArmGroup.addChildNode(rightArmSleeveNode)
-
-    // Left arm group (pivot at shoulder)
-    let leftArmGroup = SCNNode()
-    leftArmGroup.name = "LeftArmGroup"
-    leftArmGroup.position = SCNVector3(
-      CGFloat(armPositions.left.x),
-      CGFloat(armPositions.left.y) + armDimensions.height / 2,
-      CGFloat(armPositions.left.z)
-    )
-    parent.addChildNode(leftArmGroup)
-
-    // Left arm base
-    let leftArmGeometry = SCNBox(
-      width: armDimensions.width,
-      height: armDimensions.height,
-      length: armDimensions.length,
-      chamferRadius: 0
-    )
-    leftArmGeometry.materials = materialFactory.createArmMaterials(
-      from: skinImage, isLeft: true, isSleeve: false, playerModel: playerModel
-    )
-    let leftArmNode = SCNNode(geometry: leftArmGeometry)
-    leftArmNode.name = "LeftArm"
-    leftArmNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
-    leftArmGroup.addChildNode(leftArmNode)
-
-    // Left arm sleeve
-    let leftSleeveGeometry = SCNBox(
-      width: armSleeveDimensions.width,
-      height: armSleeveDimensions.height,
-      length: armSleeveDimensions.length,
-      chamferRadius: 0
-    )
-    leftSleeveGeometry.materials = materialFactory.createArmMaterials(
-      from: skinImage, isLeft: true, isSleeve: true, playerModel: playerModel
-    )
-    let leftArmSleeveNode = SCNNode(geometry: leftSleeveGeometry)
-    leftArmSleeveNode.name = "LeftArmSleeve"
-    leftArmSleeveNode.position = SCNVector3(0, -Float(armSleeveDimensions.height / 2), 0)
-    leftArmGroup.addChildNode(leftArmSleeveNode)
 
     return ArmNodes(
-      rightGroup: rightArmGroup,
-      rightBase: rightArmNode,
-      rightOverlay: rightArmSleeveNode,
-      leftGroup: leftArmGroup,
-      leftBase: leftArmNode,
-      leftOverlay: leftArmSleeveNode
+      rightGroup: rightArm.group,
+      rightBase: rightArm.base,
+      rightOverlay: rightArm.overlay,
+      leftGroup: leftArm.group,
+      leftBase: leftArm.base,
+      leftOverlay: leftArm.overlay
+    )
+  }
+
+  private func buildSingleArm(
+    skinImage: NSImage,
+    isLeft: Bool,
+    armDimensions: BoxDimensions,
+    sleeveDimensions: BoxDimensions,
+    position: SCNVector3,
+    playerModel: PlayerModel,
+    parent: SCNNode
+  ) -> SingleArmNodes {
+    let side = isLeft ? "Left" : "Right"
+
+    // Arm group (pivot at shoulder)
+    let armGroup = SCNNode()
+    armGroup.name = "\(side)ArmGroup"
+    armGroup.position = SCNVector3(
+      CGFloat(position.x),
+      CGFloat(position.y) + armDimensions.height / 2,
+      CGFloat(position.z)
+    )
+    parent.addChildNode(armGroup)
+
+    // Arm base
+    let armGeometry = SCNBox(
+      width: armDimensions.width,
+      height: armDimensions.height,
+      length: armDimensions.length,
+      chamferRadius: 0
+    )
+    armGeometry.materials = materialFactory.createArmMaterials(
+      from: skinImage, isLeft: isLeft, isSleeve: false, playerModel: playerModel
+    )
+    let armNode = SCNNode(geometry: armGeometry)
+    armNode.name = "\(side)Arm"
+    armNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
+    armGroup.addChildNode(armNode)
+
+    // Arm sleeve
+    let sleeveGeometry = SCNBox(
+      width: sleeveDimensions.width,
+      height: sleeveDimensions.height,
+      length: sleeveDimensions.length,
+      chamferRadius: 0
+    )
+    sleeveGeometry.materials = materialFactory.createArmMaterials(
+      from: skinImage, isLeft: isLeft, isSleeve: true, playerModel: playerModel
+    )
+    let sleeveNode = SCNNode(geometry: sleeveGeometry)
+    sleeveNode.name = "\(side)ArmSleeve"
+    sleeveNode.position = SCNVector3(0, -Float(sleeveDimensions.height / 2), 0)
+    armGroup.addChildNode(sleeveNode)
+
+    return SingleArmNodes(
+      group: armGroup,
+      base: armNode,
+      overlay: sleeveNode
     )
   }
 

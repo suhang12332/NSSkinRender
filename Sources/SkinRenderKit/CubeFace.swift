@@ -6,6 +6,8 @@
 import Foundation
 import CoreGraphics
 
+// swiftlint:disable comma colon
+
 public enum CubeFace: String, CaseIterable {
   case front, right, back, left, top, bottom
 
@@ -169,3 +171,4 @@ public enum CubeFace: String, CaseIterable {
     }
   }
 }
+// swiftlint:enable comma colon

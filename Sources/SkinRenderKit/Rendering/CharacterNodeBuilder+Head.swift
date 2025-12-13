@@ -7,6 +7,13 @@
 
 import SceneKit
 
+/// Container for head node hierarchy
+struct HeadNodes {
+  let group: SCNNode
+  let base: SCNNode
+  let overlay: SCNNode
+}
+
 extension CharacterNodeBuilder {
 
   // MARK: - Head
@@ -14,7 +21,7 @@ extension CharacterNodeBuilder {
   func buildHead(
     skinImage: NSImage,
     parent: SCNNode
-  ) -> (group: SCNNode, base: SCNNode, overlay: SCNNode) {
+  ) -> HeadNodes {
     // Group positioned at head center for rotations/bobbing
     let headGroup = SCNNode()
     headGroup.name = "HeadGroup"
@@ -37,6 +44,10 @@ extension CharacterNodeBuilder {
     hatNode.position = SCNVector3Zero
     headGroup.addChildNode(hatNode)
 
-    return (headGroup, headNode, hatNode)
+    return HeadNodes(
+      group: headGroup,
+      base: headNode,
+      overlay: hatNode
+    )
   }
 }

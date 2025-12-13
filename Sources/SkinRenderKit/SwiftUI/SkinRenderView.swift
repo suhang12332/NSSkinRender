@@ -227,8 +227,8 @@ public struct SkinRenderView: View {
       skinImage = validImage
       texturePath = nil
       onSkinDropped?(validImage)
-    case .invalidDimensions(let w, let h, let expected):
-      showDropError("Skin size error: \(w)×\(h), need \(expected)")
+    case .invalidDimensions(let width, let height, let expected):
+      showDropError("Skin size error: \(width)×\(height), need \(expected)")
     case .loadFailed(let message):
       showDropError(message)
     }
@@ -240,8 +240,8 @@ public struct SkinRenderView: View {
       capeImage = validImage
       capeTexturePath = nil
       onCapeDropped?(validImage)
-    case .invalidDimensions(let w, let h, let expected):
-      showDropError("Cape size error: \(w)×\(h), need \(expected)")
+    case .invalidDimensions(let width, let height, let expected):
+      showDropError("Cape size error: \(width)×\(height), need \(expected)")
     case .loadFailed(let message):
       showDropError(message)
     }

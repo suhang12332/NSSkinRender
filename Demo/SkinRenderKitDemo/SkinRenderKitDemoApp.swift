@@ -7,7 +7,7 @@ import SkinRenderKit
 import SwiftUI
 
 @main
-struct SkinRender_SwiftUIApp: App {
+struct SkinRenderSwiftUIApp: App {
   var body: some Scene {
     WindowGroup {
       SkinRenderView(playerModel: .steve, rotationDuration: 12)

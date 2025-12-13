@@ -136,40 +136,40 @@ public enum ImageDropHandler {
   /// - Parameter image: The image to validate
   /// - Returns: Validation result
   public static func validateSkin(_ image: NSImage) -> ValidationResult {
-    guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
       return .loadFailed("Cannot read image data")
     }
 
-    let w = cg.width
-    let h = cg.height
+    let width = cgImage.width
+    let height = cgImage.height
 
     // 64x64 (or exact square multiples) or legacy 64x32 in exact 2:1 multiples
-    if w == h && w % 64 == 0 {
+    if width == height && width % 64 == 0 {
       return .valid(image)  // e.g., 64x64, 128x128
     }
-    if w % 64 == 0 && h * 2 == w {
+    if width % 64 == 0 && height * 2 == width {
       return .valid(image)  // e.g., 64x32, 128x64 (legacy style)
     }
 
-    return .invalidDimensions(width: w, height: h, expected: "64x64 or 64x32")
+    return .invalidDimensions(width: width, height: height, expected: "64x64 or 64x32")
   }
 
   /// Validate an image as a Minecraft cape
   /// - Parameter image: The image to validate
   /// - Returns: Validation result
   public static func validateCape(_ image: NSImage) -> ValidationResult {
-    guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
       return .loadFailed("Cannot read image data")
     }
 
-    let w = cg.width
-    let h = cg.height
+    let width = cgImage.width
+    let height = cgImage.height
 
     // Standard 64x32 or any exact 2:1 multiple (e.g., 128x64, 256x128)
-    if w == 2 * h && w % 64 == 0 {
+    if width == 2 * height && width % 64 == 0 {
       return .valid(image)
     }
 
-    return .invalidDimensions(width: w, height: h, expected: "64x32 (2:1 ratio)")
+    return .invalidDimensions(width: width, height: height, expected: "64x32 (2:1 ratio)")
   }
 }
