@@ -61,4 +61,22 @@ public enum PlayerModel: String, CaseIterable {
     case .alex:  return (SCNVector3(5.5, 6, 0), SCNVector3(-5.5, 6, 0))
     }
   }
+
+  /// Leg box dimensions for the model (width, height, length).
+  /// Same for all player models.
+  var legDimensions: BoxDimensions {
+    BoxDimensions(width: 4.0, height: 12.0, length: 4.0)
+  }
+
+  /// Leg sleeve overlay box dimensions (width, height, length).
+  /// Same for all player models.
+  var legSleeveDimensions: BoxDimensions {
+    BoxDimensions(width: 4.5, height: 12.5, length: 4.5)
+  }
+
+  /// Local positions for left and right leg attachment points.
+  /// Same for all player models.
+  var legPositions: (left: SCNVector3, right: SCNVector3) {
+    (SCNVector3(2, 0, 0), SCNVector3(-2, 0, 0))
+  }
 }

@@ -9,6 +9,15 @@ import SceneKit
 
 extension CharacterNodeBuilder {
 
+  // MARK: - Common Limb Structure
+
+  /// Result of building a single limb (arm or leg)
+  private struct SingleLimbNodes {
+    let group: SCNNode
+    let base: SCNNode
+    let overlay: SCNNode
+  }
+
   // MARK: - Arm Nodes
 
   struct ArmNodes {
@@ -18,12 +27,6 @@ extension CharacterNodeBuilder {
     let leftGroup: SCNNode
     let leftBase: SCNNode
     let leftOverlay: SCNNode
-  }
-
-  private struct SingleArmNodes {
-    let group: SCNNode
-    let base: SCNNode
-    let overlay: SCNNode
   }
 
   func buildArms(
@@ -73,7 +76,7 @@ extension CharacterNodeBuilder {
     position: SCNVector3,
     playerModel: PlayerModel,
     parent: SCNNode
-  ) -> SingleArmNodes {
+  ) -> SingleLimbNodes {
     let side = isLeft ? "Left" : "Right"
 
     // Arm group (pivot at shoulder)
@@ -116,7 +119,7 @@ extension CharacterNodeBuilder {
     sleeveNode.position = SCNVector3(0, -Float(sleeveDimensions.height / 2), 0)
     armGroup.addChildNode(sleeveNode)
 
-    return SingleArmNodes(
+    return SingleLimbNodes(
       group: armGroup,
       base: armNode,
       overlay: sleeveNode
@@ -136,67 +139,91 @@ extension CharacterNodeBuilder {
 
   func buildLegs(
     skinImage: NSImage,
+    playerModel: PlayerModel,
     parent: SCNNode
   ) -> LegNodes {
-    // Right leg group (pivot at hip)
-    let rightLegGroup = SCNNode()
-    rightLegGroup.name = "RightLegGroup"
-    rightLegGroup.position = SCNVector3(-2, 0, 0)
-    parent.addChildNode(rightLegGroup)
+    let legDimensions = playerModel.legDimensions
+    let legSleeveDimensions = playerModel.legSleeveDimensions
+    let legPositions = playerModel.legPositions
 
-    // Right leg base (4x12x4)
-    let rightLegGeometry = SCNBox(width: 4, height: 12, length: 4, chamferRadius: 0)
-    rightLegGeometry.materials = materialFactory.createLegMaterials(
-      from: skinImage, isLeft: false, isSleeve: false
+    let rightLeg = buildSingleLeg(
+      skinImage: skinImage,
+      isLeft: false,
+      legDimensions: legDimensions,
+      sleeveDimensions: legSleeveDimensions,
+      position: legPositions.right,
+      parent: parent
     )
-    let rightLegNode = SCNNode(geometry: rightLegGeometry)
-    rightLegNode.name = "RightLeg"
-    rightLegNode.position = SCNVector3(0, -6, 0)
-    rightLegGroup.addChildNode(rightLegNode)
 
-    // Right leg sleeve (4.5x12.5x4.5)
-    let rightLegSleeveGeometry = SCNBox(width: 4.5, height: 12.5, length: 4.5, chamferRadius: 0)
-    rightLegSleeveGeometry.materials = materialFactory.createLegMaterials(
-      from: skinImage, isLeft: false, isSleeve: true
+    let leftLeg = buildSingleLeg(
+      skinImage: skinImage,
+      isLeft: true,
+      legDimensions: legDimensions,
+      sleeveDimensions: legSleeveDimensions,
+      position: legPositions.left,
+      parent: parent
     )
-    let rightLegSleeveNode = SCNNode(geometry: rightLegSleeveGeometry)
-    rightLegSleeveNode.name = "RightLegSleeve"
-    rightLegSleeveNode.position = SCNVector3(0, -6.25, 0)
-    rightLegGroup.addChildNode(rightLegSleeveNode)
-
-    // Left leg group (pivot at hip)
-    let leftLegGroup = SCNNode()
-    leftLegGroup.name = "LeftLegGroup"
-    leftLegGroup.position = SCNVector3(2, 0, 0)
-    parent.addChildNode(leftLegGroup)
-
-    // Left leg base (4x12x4)
-    let leftLegGeometry = SCNBox(width: 4, height: 12, length: 4, chamferRadius: 0)
-    leftLegGeometry.materials = materialFactory.createLegMaterials(
-      from: skinImage, isLeft: true, isSleeve: false
-    )
-    let leftLegNode = SCNNode(geometry: leftLegGeometry)
-    leftLegNode.name = "LeftLeg"
-    leftLegNode.position = SCNVector3(0, -6, 0)
-    leftLegGroup.addChildNode(leftLegNode)
-
-    // Left leg sleeve (4.5x12.5x4.5)
-    let leftLegSleeveGeometry = SCNBox(width: 4.5, height: 12.5, length: 4.5, chamferRadius: 0)
-    leftLegSleeveGeometry.materials = materialFactory.createLegMaterials(
-      from: skinImage, isLeft: true, isSleeve: true
-    )
-    let leftLegSleeveNode = SCNNode(geometry: leftLegSleeveGeometry)
-    leftLegSleeveNode.name = "LeftLegSleeve"
-    leftLegSleeveNode.position = SCNVector3(0, -6.25, 0)
-    leftLegGroup.addChildNode(leftLegSleeveNode)
 
     return LegNodes(
-      rightGroup: rightLegGroup,
-      rightBase: rightLegNode,
-      rightOverlay: rightLegSleeveNode,
-      leftGroup: leftLegGroup,
-      leftBase: leftLegNode,
-      leftOverlay: leftLegSleeveNode
+      rightGroup: rightLeg.group,
+      rightBase: rightLeg.base,
+      rightOverlay: rightLeg.overlay,
+      leftGroup: leftLeg.group,
+      leftBase: leftLeg.base,
+      leftOverlay: leftLeg.overlay
+    )
+  }
+
+  private func buildSingleLeg(
+    skinImage: NSImage,
+    isLeft: Bool,
+    legDimensions: BoxDimensions,
+    sleeveDimensions: BoxDimensions,
+    position: SCNVector3,
+    parent: SCNNode
+  ) -> SingleLimbNodes {
+    let side = isLeft ? "Left" : "Right"
+
+    // Leg group (pivot at hip)
+    let legGroup = SCNNode()
+    legGroup.name = "\(side)LegGroup"
+    legGroup.position = position
+    parent.addChildNode(legGroup)
+
+    // Leg base
+    let legGeometry = SCNBox(
+      width: legDimensions.width,
+      height: legDimensions.height,
+      length: legDimensions.length,
+      chamferRadius: 0
+    )
+    legGeometry.materials = materialFactory.createLegMaterials(
+      from: skinImage, isLeft: isLeft, isSleeve: false
+    )
+    let legNode = SCNNode(geometry: legGeometry)
+    legNode.name = "\(side)Leg"
+    legNode.position = SCNVector3(0, -Float(legDimensions.height / 2), 0)
+    legGroup.addChildNode(legNode)
+
+    // Leg sleeve
+    let sleeveGeometry = SCNBox(
+      width: sleeveDimensions.width,
+      height: sleeveDimensions.height,
+      length: sleeveDimensions.length,
+      chamferRadius: 0
+    )
+    sleeveGeometry.materials = materialFactory.createLegMaterials(
+      from: skinImage, isLeft: isLeft, isSleeve: true
+    )
+    let sleeveNode = SCNNode(geometry: sleeveGeometry)
+    sleeveNode.name = "\(side)LegSleeve"
+    sleeveNode.position = SCNVector3(0, -Float(sleeveDimensions.height / 2), 0)
+    legGroup.addChildNode(sleeveNode)
+
+    return SingleLimbNodes(
+      group: legGroup,
+      base: legNode,
+      overlay: sleeveNode
     )
   }
 }

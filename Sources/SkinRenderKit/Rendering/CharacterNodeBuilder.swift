@@ -146,7 +146,7 @@ public final class CharacterNodeBuilder {
     let headNodes = buildHead(skinImage: skinImage, parent: root)
     let bodyNodes = buildBody(skinImage: skinImage, parent: root)
     let armNodes = buildArms(skinImage: skinImage, playerModel: playerModel, parent: root)
-    let legNodes = buildLegs(skinImage: skinImage, parent: root)
+    let legNodes = buildLegs(skinImage: skinImage, playerModel: playerModel, parent: root)
 
     let nodes = CharacterNodes(
       root: root,
