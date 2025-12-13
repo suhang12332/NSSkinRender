@@ -16,10 +16,7 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "SkinRenderKit",
-      resources: [
-        .process("Resources")
-      ]
+      name: "SkinRenderKit"
     )
   ]
 )
