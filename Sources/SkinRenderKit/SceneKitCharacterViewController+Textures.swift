@@ -26,12 +26,7 @@ extension SceneKitCharacterViewController {
   /// Used during initialization
   func loadDefaultTextureIfNeeded() {
     guard skinImage == nil else { return }
-    if let resourceURL = Bundle.module.url(forResource: "alex", withExtension: "png"),
-       let image = NSImage(contentsOf: resourceURL) {
-      self.skinImage = image
-    } else {
-      self.skinImage = NSImage(named: "Skin")
-    }
+    self.skinImage = EmbeddedTextures.alexImage
   }
 
   /// Public method for updateNSViewController - skips if skin already loaded

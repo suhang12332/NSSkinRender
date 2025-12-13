@@ -40,10 +40,6 @@ extension CharacterNodeBuilder {
   // MARK: - Default Cape
 
   func loadDefaultCapeTexture() -> NSImage? {
-    if let resourceURL = Bundle.module.url(forResource: "cape", withExtension: "png"),
-       let image = NSImage(contentsOf: resourceURL) {
-      return image
-    }
-    return NSImage(named: "cape")
+    EmbeddedTextures.capeImage
   }
 }
