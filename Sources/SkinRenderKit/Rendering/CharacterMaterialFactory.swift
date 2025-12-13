@@ -157,10 +157,14 @@ public final class CharacterMaterialFactory {
     for spec in CubeFace.cape {
       let material = SCNMaterial()
 
-      if let croppedImage = TextureProcessor.crop(capeImage, rect: spec.rect) {
-        let finalImage = spec.rotate180
-          ? (TextureProcessor.rotate(croppedImage, degrees: 180) ?? croppedImage)
-          : croppedImage
+      switch TextureProcessor.crop(capeImage, rect: spec.rect) {
+      case .success(let croppedImage):
+        let finalImage: NSImage
+        if spec.rotate180 {
+          finalImage = (try? TextureProcessor.rotate(croppedImage, degrees: 180).get()) ?? croppedImage
+        } else {
+          finalImage = croppedImage
+        }
 
         material.diffuse.contents = finalImage
         material.diffuse.magnificationFilter = .nearest
@@ -187,7 +191,8 @@ public final class CharacterMaterialFactory {
         // Subtle ambient and specular properties
         material.ambient.contents = NSColor.black.withAlphaComponent(0.2)
         material.specular.contents = NSColor.white.withAlphaComponent(0.1)
-      } else {
+
+      case .failure:
         // Fallback material
         material.diffuse.contents = NSColor.red.withAlphaComponent(0.8)
         material.transparency = 0.8
@@ -224,24 +229,27 @@ public final class CharacterMaterialFactory {
     for (index, spec) in specs.enumerated() {
       let material = SCNMaterial()
 
-      if let croppedImage = TextureProcessor.crop(skinImage, rect: spec.rect) {
+      switch TextureProcessor.crop(skinImage, rect: spec.rect) {
+      case .success(let croppedImage):
         let finalImage: NSImage
 
         // Apply bottom face transforms
         if index == 5 {  // bottom face
+          let transformResult: Result<NSImage, TextureProcessor.Error>
           if isLimb {
-            finalImage = TextureProcessor.applyBottomFaceTransform(
+            transformResult = TextureProcessor.applyBottomFaceTransform(
               croppedImage,
               flipMode: bottomFaceConfig.limbFlipMode,
               rotate180: bottomFaceConfig.limbRotate180
             )
           } else {
-            finalImage = TextureProcessor.applyBottomFaceTransform(
+            transformResult = TextureProcessor.applyBottomFaceTransform(
               croppedImage,
               flipMode: bottomFaceConfig.headBodyFlipMode,
               rotate180: bottomFaceConfig.headBodyRotate180
             )
           }
+          finalImage = (try? transformResult.get()) ?? croppedImage
         } else {
           finalImage = croppedImage
         }
@@ -265,7 +273,8 @@ public final class CharacterMaterialFactory {
         }
 
         material.lightingModel = .constant
-      } else {
+
+      case .failure:
         // Fallback material for failed crops
         material.diffuse.contents = isOuter
           ? NSColor.blue.withAlphaComponent(0.5)
@@ -290,7 +299,8 @@ public final class CharacterMaterialFactory {
 
     let spec = isLeft ? CubeFace.elytraLeftWing : CubeFace.elytraRightWing
 
-    if let croppedImage = TextureProcessor.crop(elytraImage, rect: spec.rect) {
+    switch TextureProcessor.crop(elytraImage, rect: spec.rect) {
+    case .success(let croppedImage):
       material.diffuse.contents = croppedImage
       material.diffuse.magnificationFilter = .nearest
       material.diffuse.minificationFilter = .nearest
@@ -311,7 +321,8 @@ public final class CharacterMaterialFactory {
       // Add subtle ambient and specular highlights
       material.ambient.contents = NSColor.black.withAlphaComponent(0.2)
       material.specular.contents = NSColor.white.withAlphaComponent(0.15)
-    } else {
+
+    case .failure:
       // Fallback material
       material.diffuse.contents = NSColor.purple.withAlphaComponent(0.8)
       material.transparency = 0.8
