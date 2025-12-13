@@ -77,8 +77,14 @@ public final class CharacterAnimationController {
   public func setupRotationAnimation() {
     guard let root = characterNodes?.root else { return }
 
+    // Capture current rotation angle from presentation layer (actual rendered state)
+    let currentRotation = root.presentation.eulerAngles.y
+
     // Remove existing rotation
     root.removeAction(forKey: AnimationKey.rotation)
+
+    // Restore the current rotation angle so animation continues from here
+    root.eulerAngles.y = currentRotation
 
     // Only add rotation if duration is positive
     guard rotationDuration > 0 else { return }

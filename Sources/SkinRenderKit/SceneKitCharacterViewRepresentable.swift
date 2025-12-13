@@ -85,41 +85,48 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
   // MARK: - NSViewControllerRepresentable
 
   public func makeNSViewController(context: Context) -> SceneKitCharacterViewController {
-    if let skinImage = skinImage {
-      return SceneKitCharacterViewController(
-        skinImage: skinImage,
-        capeImage: capeImage,
-        playerModel: playerModel,
-        rotationDuration: rotationDuration,
-        backgroundColor: backgroundColor,
-        debugMode: debugMode
-      )
-    } else if let texturePath = texturePath {
-      return SceneKitCharacterViewController(
-        texturePath: texturePath,
-        capeTexturePath: capeTexturePath,
-        playerModel: playerModel,
-        rotationDuration: rotationDuration,
-        backgroundColor: backgroundColor,
-        debugMode: debugMode
-      )
-    } else if let capeImage = capeImage {
-      let controller = SceneKitCharacterViewController(
-        playerModel: playerModel,
-        rotationDuration: rotationDuration,
-        backgroundColor: backgroundColor,
-        debugMode: debugMode
-      )
-      controller.updateCapeTexture(image: capeImage)
-      return controller
-    } else {
-      return SceneKitCharacterViewController(
-        playerModel: playerModel,
-        rotationDuration: rotationDuration,
-        backgroundColor: backgroundColor,
-        debugMode: debugMode
-      )
-    }
+    // if let skinImage = skinImage {
+    //   return SceneKitCharacterViewController(
+    //     skinImage: skinImage,
+    //     capeImage: capeImage,
+    //     playerModel: playerModel,
+    //     rotationDuration: rotationDuration,
+    //     backgroundColor: backgroundColor,
+    //     debugMode: debugMode
+    //   )
+    // } else if let texturePath = texturePath {
+    //   return SceneKitCharacterViewController(
+    //     texturePath: texturePath,
+    //     capeTexturePath: capeTexturePath,
+    //     playerModel: playerModel,
+    //     rotationDuration: rotationDuration,
+    //     backgroundColor: backgroundColor,
+    //     debugMode: debugMode
+    //   )
+    // } else if let capeImage = capeImage {
+    //   let controller = SceneKitCharacterViewController(
+    //     playerModel: playerModel,
+    //     rotationDuration: rotationDuration,
+    //     backgroundColor: backgroundColor,
+    //     debugMode: debugMode
+    //   )
+    //   controller.updateCapeTexture(image: capeImage)
+    //   return controller
+    // } else {
+    //   return SceneKitCharacterViewController(
+    //     playerModel: playerModel,
+    //     rotationDuration: rotationDuration,
+    //     backgroundColor: backgroundColor,
+    //     debugMode: debugMode
+    //   )
+    // }
+
+    return SceneKitCharacterViewController(
+      playerModel: playerModel,
+      rotationDuration: rotationDuration,
+      backgroundColor: backgroundColor,
+      debugMode: debugMode
+    )
   }
 
   public func updateNSViewController(
@@ -129,14 +136,13 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     // Update player model
     nsViewController.updatePlayerModel(playerModel)
 
-    // Update button visibility
-    nsViewController.updateShowButtons(debugMode)
-
     // Update skin texture
     if let skinImage = skinImage {
       nsViewController.updateTexture(image: skinImage)
     } else if let texturePath = texturePath {
       nsViewController.updateTexture(path: texturePath)
+    } else {
+      nsViewController.loadDefaultTexture()
     }
 
     // Update cape texture

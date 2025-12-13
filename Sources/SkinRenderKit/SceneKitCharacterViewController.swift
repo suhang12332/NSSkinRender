@@ -129,9 +129,7 @@ public class SceneKitCharacterViewController: NSViewController {
     super.viewDidLoad()
 
     // Load default texture if none set
-    if skinImage == nil {
-      loadDefaultTexture()
-    }
+    loadDefaultTextureIfNeeded()
 
     setupScene()
     rebuildCharacter()
