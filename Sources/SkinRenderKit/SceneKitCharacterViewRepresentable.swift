@@ -82,6 +82,25 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     self.debugMode = debugMode
   }
 
+  /// Initialize with mixed texture inputs (image for skin, path for cape)
+  public init(
+    skinImage: NSImage,
+    capeTexturePath: String,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .gray,
+    debugMode: Bool = false
+  ) {
+    self.texturePath = nil
+    self.skinImage = skinImage
+    self.capeTexturePath = capeTexturePath
+    self.capeImage = nil
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.debugMode = debugMode
+  }
+
   // MARK: - NSViewControllerRepresentable
 
   public func makeNSViewController(context: Context) -> SceneKitCharacterViewController {
