@@ -115,6 +115,15 @@ public enum CubeFace: String, CaseIterable {
     }
   }
 
+  // MARK: - Elytra (Wings)
+  /// Left wing texture specification for plane rendering
+  /// The left wing uses the main wing texture from the elytra texture (64x32)
+  public static let elytraLeftWing: Spec = Spec(.front, rect: CGRect(x: 12, y: 0, width: 10, height: 20))
+
+  /// Right wing texture specification for plane rendering
+  /// The right wing mirrors the left wing texture
+  public static let elytraRightWing: Spec = Spec(.front, rect: CGRect(x: 22, y: 0, width: 10, height: 20))
+
   // MARK: - Legs
   public static func legBase(isLeft: Bool) -> [Spec] {
     if isLeft {
