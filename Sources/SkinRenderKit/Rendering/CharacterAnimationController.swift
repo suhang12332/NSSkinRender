@@ -17,7 +17,7 @@ public final class CharacterAnimationController {
   // MARK: - Animation Configuration
 
   /// Duration for one complete rotation (0 = no rotation)
-  public var rotationDuration: TimeInterval = 15.0
+  public var rotationDuration: TimeInterval = CharacterDimensions.Animation.defaultRotationDuration
 
   /// Whether walking animation is enabled
   public private(set) var walkingEnabled: Bool = false
@@ -27,28 +27,25 @@ public final class CharacterAnimationController {
 
   // MARK: - Cape Sway Configuration
 
-  /// Base amplitude for cape sway animation (~7.5°)
-  public var baseCapeSwayAmplitude: Float = Float.pi / 24
+  /// Base amplitude for cape sway animation
+  public var baseCapeSwayAmplitude: Float = CharacterDimensions.Animation.capeSwayAmplitude
 
   /// Multiplier for cape sway when walking
-  public var walkingCapeSwayMultiplier: Float = 1.9
-
-  /// Base backward tilt angle for cape (~12.8°)
-  private let capeBaseAngle: Float = Float.pi / 14
+  public var walkingCapeSwayMultiplier: Float = CharacterDimensions.Animation.capeSwayWalkingMultiplier
 
   // MARK: - Walking Animation Configuration
 
-  /// Arm swing amplitude in radians (45°)
-  private let armSwingAmplitude: CGFloat = .pi / 4
+  /// Arm swing amplitude in radians
+  private let armSwingAmplitude: CGFloat = CharacterDimensions.Animation.armSwingAmplitude
 
-  /// Leg swing amplitude in radians (36°)
-  private let legSwingAmplitude: CGFloat = .pi / 5
+  /// Leg swing amplitude in radians
+  private let legSwingAmplitude: CGFloat = CharacterDimensions.Animation.legSwingAmplitude
 
   /// Duration for one walking cycle
-  private let walkingCycleDuration: TimeInterval = 0.8
+  private let walkingCycleDuration: TimeInterval = CharacterDimensions.Animation.walkingCycleDuration
 
   /// Head bob distance
-  private let headBobDistance: CGFloat = 0.3
+  private let headBobDistance: CGFloat = CharacterDimensions.Animation.headBobDistance
 
   // MARK: - Animation Keys
 
@@ -193,7 +190,7 @@ public final class CharacterAnimationController {
     nodes.headGroup.removeAction(forKey: AnimationKey.headBob)
     SCNTransaction.begin()
     SCNTransaction.animationDuration = 0.25
-    nodes.headGroup.position.y = 16
+    nodes.headGroup.position.y = CharacterDimensions.headY
     SCNTransaction.commit()
 
     // Refresh cape sway without walking multiplier
@@ -242,12 +239,14 @@ public final class CharacterAnimationController {
     guard let capePivot = characterNodes?.capePivot else { return }
 
     let swayAmplitude = baseCapeSwayAmplitude * (walkingEnabled ? walkingCapeSwayMultiplier : 1.0)
+    let capeBaseAngle = CharacterDimensions.capeBaseAngle
+    let capeSideSwayAngle = CharacterDimensions.Animation.capeSideSwayAngle
 
     // Animation sequence: sway left, center, right, center
     let rotateLeft = SCNAction.rotateTo(
       x: CGFloat(capeBaseAngle + swayAmplitude),
       y: 0,
-      z: CGFloat(Float.pi / 40),
+      z: CGFloat(capeSideSwayAngle),
       duration: 2.0
     )
 
@@ -261,7 +260,7 @@ public final class CharacterAnimationController {
     let rotateRight = SCNAction.rotateTo(
       x: CGFloat(capeBaseAngle + swayAmplitude),
       y: 0,
-      z: CGFloat(-Float.pi / 40),
+      z: CGFloat(-capeSideSwayAngle),
       duration: 2.0
     )
 
@@ -294,7 +293,7 @@ public final class CharacterAnimationController {
     } else {
       capePivot.removeAction(forKey: AnimationKey.capeSway)
       // Reset to base rotation
-      capePivot.eulerAngles = SCNVector3(capeBaseAngle, 0, 0)
+      capePivot.eulerAngles = SCNVector3(CharacterDimensions.capeBaseAngle, 0, 0)
     }
   }
 

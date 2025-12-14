@@ -18,8 +18,8 @@ extension SceneKitCharacterViewController {
   func setupCamera() {
     let cameraNode = SCNNode()
     cameraNode.camera = SCNCamera()
-    cameraNode.position = SCNVector3(0, 16, 36)
-    cameraNode.look(at: SCNVector3(0, 6, 0))
+    cameraNode.position = CharacterDimensions.cameraPosition
+    cameraNode.look(at: CharacterDimensions.cameraTarget)
     scene.rootNode.addChildNode(cameraNode)
   }
 
@@ -28,15 +28,15 @@ extension SceneKitCharacterViewController {
     let ambientLight = SCNNode()
     ambientLight.light = SCNLight()
     ambientLight.light?.type = .ambient
-    ambientLight.light?.intensity = 300
+    ambientLight.light?.intensity = CharacterDimensions.Lighting.ambientIntensity
     scene.rootNode.addChildNode(ambientLight)
 
     // Directional light
     let directionalLight = SCNNode()
     directionalLight.light = SCNLight()
     directionalLight.light?.type = .directional
-    directionalLight.light?.intensity = 500
-    directionalLight.eulerAngles = SCNVector3(-Float.pi / 4, Float.pi / 4, 0)
+    directionalLight.light?.intensity = CharacterDimensions.Lighting.directionalIntensity
+    directionalLight.eulerAngles = CharacterDimensions.Lighting.directionalAngles
     scene.rootNode.addChildNode(directionalLight)
   }
 

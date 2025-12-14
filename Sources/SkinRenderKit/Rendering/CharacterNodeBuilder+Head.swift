@@ -25,19 +25,21 @@ extension CharacterNodeBuilder {
     // Group positioned at head center for rotations/bobbing
     let headGroup = SCNNode()
     headGroup.name = "HeadGroup"
-    headGroup.position = SCNVector3(0, 16, 0)
+    headGroup.position = SCNVector3(0, CharacterDimensions.headY, 0)
     parent.addChildNode(headGroup)
 
-    // Base head (8x8x8)
-    let headGeometry = SCNBox(width: 8, height: 8, length: 8, chamferRadius: 0)
+    // Base head
+    let headSize = CharacterDimensions.headSize
+    let headGeometry = SCNBox(width: headSize, height: headSize, length: headSize, chamferRadius: 0)
     headGeometry.materials = materialFactory.createHeadMaterials(from: skinImage, isHat: false)
     let headNode = SCNNode(geometry: headGeometry)
     headNode.name = "Head"
     headNode.position = SCNVector3Zero
     headGroup.addChildNode(headNode)
 
-    // Hat layer (9x9x9)
-    let hatGeometry = SCNBox(width: 9, height: 9, length: 9, chamferRadius: 0)
+    // Hat layer
+    let hatSize = CharacterDimensions.hatSize
+    let hatGeometry = SCNBox(width: hatSize, height: hatSize, length: hatSize, chamferRadius: 0)
     hatGeometry.materials = materialFactory.createHeadMaterials(from: skinImage, isHat: true)
     let hatNode = SCNNode(geometry: hatGeometry)
     hatNode.name = "Hat"
