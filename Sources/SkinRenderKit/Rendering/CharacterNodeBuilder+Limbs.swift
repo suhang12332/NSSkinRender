@@ -104,7 +104,7 @@ extension CharacterNodeBuilder {
     armNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
     armGroup.addChildNode(armNode)
 
-    // Arm sleeve
+    // Arm sleeve (centered with base arm)
     let sleeveGeometry = SCNBox(
       width: sleeveDimensions.width,
       height: sleeveDimensions.height,
@@ -116,7 +116,7 @@ extension CharacterNodeBuilder {
     )
     let sleeveNode = SCNNode(geometry: sleeveGeometry)
     sleeveNode.name = "\(side)ArmSleeve"
-    sleeveNode.position = SCNVector3(0, -Float(sleeveDimensions.height / 2), 0)
+    sleeveNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
     armGroup.addChildNode(sleeveNode)
 
     return SingleLimbNodes(
@@ -205,7 +205,7 @@ extension CharacterNodeBuilder {
     legNode.position = SCNVector3(0, -Float(legDimensions.height / 2), 0)
     legGroup.addChildNode(legNode)
 
-    // Leg sleeve
+    // Leg sleeve (centered with base leg)
     let sleeveGeometry = SCNBox(
       width: sleeveDimensions.width,
       height: sleeveDimensions.height,
@@ -217,7 +217,7 @@ extension CharacterNodeBuilder {
     )
     let sleeveNode = SCNNode(geometry: sleeveGeometry)
     sleeveNode.name = "\(side)LegSleeve"
-    sleeveNode.position = SCNVector3(0, -Float(sleeveDimensions.height / 2), 0)
+    sleeveNode.position = SCNVector3(0, -Float(legDimensions.height / 2), 0)
     legGroup.addChildNode(sleeveNode)
 
     return SingleLimbNodes(
