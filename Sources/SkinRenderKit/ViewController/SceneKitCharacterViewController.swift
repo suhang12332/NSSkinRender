@@ -75,8 +75,6 @@ public class SceneKitCharacterViewController: NSViewController {
     static let verticalSpacing: CGFloat = 40
   }
 
-  private var debugButtons: [NSButton] = []
-
   lazy var toggleButton: NSButton = {
     createDebugButton(
       yPosition: 20,

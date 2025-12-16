@@ -25,19 +25,30 @@ extension SceneKitCharacterViewController {
 
   func setupLighting() {
     // Ambient light
-    let ambientLight = SCNNode()
-    ambientLight.light = SCNLight()
-    ambientLight.light?.type = .ambient
-    ambientLight.light?.intensity = CharacterDimensions.Lighting.ambientIntensity
-    scene.rootNode.addChildNode(ambientLight)
+    createAndAddLight(
+      type: .ambient,
+      intensity: CharacterDimensions.Lighting.ambientIntensity
+    )
 
     // Directional light
-    let directionalLight = SCNNode()
-    directionalLight.light = SCNLight()
-    directionalLight.light?.type = .directional
-    directionalLight.light?.intensity = CharacterDimensions.Lighting.directionalIntensity
-    directionalLight.eulerAngles = CharacterDimensions.Lighting.directionalAngles
-    scene.rootNode.addChildNode(directionalLight)
+    createAndAddLight(
+      type: .directional,
+      intensity: CharacterDimensions.Lighting.directionalIntensity,
+      eulerAngles: CharacterDimensions.Lighting.directionalAngles
+    )
+  }
+
+  private func createAndAddLight(
+    type: SCNLight.LightType,
+    intensity: CGFloat,
+    eulerAngles: SCNVector3 = SCNVector3Zero
+  ) {
+    let lightNode = SCNNode()
+    lightNode.light = SCNLight()
+    lightNode.light?.type = type
+    lightNode.light?.intensity = intensity
+    lightNode.eulerAngles = eulerAngles
+    scene.rootNode.addChildNode(lightNode)
   }
 
   func setupUI() {
