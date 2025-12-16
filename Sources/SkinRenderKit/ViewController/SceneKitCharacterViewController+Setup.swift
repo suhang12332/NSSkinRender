@@ -42,11 +42,7 @@ extension SceneKitCharacterViewController {
 
   func setupUI() {
     guard debugMode else { return }
-    view.addSubview(toggleButton)
-    view.addSubview(modelTypeButton)
-    view.addSubview(capeToggleButton)
-    view.addSubview(capeAnimationButton)
-    view.addSubview(walkingAnimationButton)
+    allDebugButtons.forEach { view.addSubview($0) }
   }
 
   func setupGestureRecognizers() {

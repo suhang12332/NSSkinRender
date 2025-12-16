@@ -46,7 +46,10 @@ extension SceneKitCharacterViewController {
 
   private func isPointOverUIButton(_ point: CGPoint) -> Bool {
     guard debugMode else { return false }
-    let buttons = [toggleButton, modelTypeButton, capeToggleButton, capeAnimationButton, walkingAnimationButton]
-    return buttons.contains { $0.frame.contains(point) }
+    return allDebugButtons.contains { $0.frame.contains(point) }
+  }
+
+  var allDebugButtons: [NSButton] {
+    [toggleButton, modelTypeButton, capeToggleButton, capeAnimationButton, walkingAnimationButton]
   }
 }

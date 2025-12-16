@@ -77,11 +77,7 @@ extension SceneKitCharacterViewController {
     self.debugMode = show
 
     if !show {
-      toggleButton.removeFromSuperview()
-      modelTypeButton.removeFromSuperview()
-      capeToggleButton.removeFromSuperview()
-      capeAnimationButton.removeFromSuperview()
-      walkingAnimationButton.removeFromSuperview()
+      allDebugButtons.forEach { $0.removeFromSuperview() }
     } else {
       setupUI()
     }

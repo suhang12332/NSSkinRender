@@ -68,55 +68,71 @@ public class SceneKitCharacterViewController: NSViewController {
 
   // MARK: - Debug UI
 
+  private enum DebugButtonConfig {
+    static let xPosition: CGFloat = 20
+    static let width: CGFloat = 130
+    static let height: CGFloat = 30
+    static let verticalSpacing: CGFloat = 40
+  }
+
+  private var debugButtons: [NSButton] = []
+
   lazy var toggleButton: NSButton = {
-    let button = NSButton(frame: NSRect(x: 20, y: 20, width: 130, height: 30))
-    button.title = showOuterLayers ? "Hide Outer Layers" : "Show Outer Layers"
-    button.bezelStyle = .rounded
-    button.target = self
-    button.action = #selector(toggleOuterLayers)
-    button.autoresizingMask = [.maxXMargin, .maxYMargin]
-    return button
+    createDebugButton(
+      yPosition: 20,
+      title: showOuterLayers ? "Hide Outer Layers" : "Show Outer Layers",
+      action: #selector(toggleOuterLayers)
+    )
   }()
 
   lazy var modelTypeButton: NSButton = {
-    let button = NSButton(frame: NSRect(x: 20, y: 60, width: 130, height: 30))
-    button.title = "Switch to \(playerModel == .steve ? "Alex" : "Steve")"
-    button.bezelStyle = .rounded
-    button.target = self
-    button.action = #selector(switchModelType)
-    button.autoresizingMask = [.maxXMargin, .maxYMargin]
-    return button
+    createDebugButton(
+      yPosition: 60,
+      title: "Switch to \(playerModel == .steve ? "Alex" : "Steve")",
+      action: #selector(switchModelType)
+    )
   }()
 
   lazy var capeToggleButton: NSButton = {
-    let button = NSButton(frame: NSRect(x: 20, y: 100, width: 130, height: 30))
-    button.title = showCape ? "Hide Cape" : "Show Cape"
-    button.bezelStyle = .rounded
-    button.target = self
-    button.action = #selector(toggleCape)
-    button.autoresizingMask = [.maxXMargin, .maxYMargin]
-    return button
+    createDebugButton(
+      yPosition: 100,
+      title: showCape ? "Hide Cape" : "Show Cape",
+      action: #selector(toggleCape)
+    )
   }()
 
   lazy var capeAnimationButton: NSButton = {
-    let button = NSButton(frame: NSRect(x: 20, y: 140, width: 130, height: 30))
-    button.title = "Disable Animation"
-    button.bezelStyle = .rounded
-    button.target = self
-    button.action = #selector(toggleCapeAnimationAction)
-    button.autoresizingMask = [.maxXMargin, .maxYMargin]
-    return button
+    createDebugButton(
+      yPosition: 140,
+      title: "Disable Animation",
+      action: #selector(toggleCapeAnimationAction)
+    )
   }()
 
   lazy var walkingAnimationButton: NSButton = {
-    let button = NSButton(frame: NSRect(x: 20, y: 180, width: 130, height: 30))
-    button.title = "Start Walking"
+    createDebugButton(
+      yPosition: 180,
+      title: "Start Walking",
+      action: #selector(toggleWalkingAnimationAction)
+    )
+  }()
+
+  private func createDebugButton(yPosition: CGFloat, title: String, action: Selector) -> NSButton {
+    let button = NSButton(
+      frame: NSRect(
+        x: DebugButtonConfig.xPosition,
+        y: yPosition,
+        width: DebugButtonConfig.width,
+        height: DebugButtonConfig.height
+      )
+    )
+    button.title = title
     button.bezelStyle = .rounded
     button.target = self
-    button.action = #selector(toggleWalkingAnimationAction)
+    button.action = action
     button.autoresizingMask = [.maxXMargin, .maxYMargin]
     return button
-  }()
+  }
 
   // MARK: - Lifecycle
 
