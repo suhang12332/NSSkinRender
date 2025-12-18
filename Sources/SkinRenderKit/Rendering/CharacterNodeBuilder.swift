@@ -22,6 +22,7 @@ public final class CharacterNodeBuilder {
     public let hat: SCNNode
 
     // Body
+    public let bodyGroup: SCNNode
     public let body: SCNNode
     public let jacket: SCNNode
 
@@ -53,7 +54,7 @@ public final class CharacterNodeBuilder {
     init(
       root: SCNNode,
       headGroup: SCNNode, head: SCNNode, hat: SCNNode,
-      body: SCNNode, jacket: SCNNode,
+      bodyGroup: SCNNode, body: SCNNode, jacket: SCNNode,
       rightArmGroup: SCNNode, rightArm: SCNNode, rightArmSleeve: SCNNode,
       leftArmGroup: SCNNode, leftArm: SCNNode, leftArmSleeve: SCNNode,
       rightLegGroup: SCNNode, rightLeg: SCNNode, rightLegSleeve: SCNNode,
@@ -64,6 +65,7 @@ public final class CharacterNodeBuilder {
       self.headGroup = headGroup
       self.head = head
       self.hat = hat
+      self.bodyGroup = bodyGroup
       self.body = body
       self.jacket = jacket
       self.rightArmGroup = rightArmGroup
@@ -153,6 +155,7 @@ public final class CharacterNodeBuilder {
       headGroup: headNodes.group,
       head: headNodes.base,
       hat: headNodes.overlay,
+      bodyGroup: bodyNodes.group,
       body: bodyNodes.base,
       jacket: bodyNodes.overlay,
       rightArmGroup: armNodes.rightGroup,

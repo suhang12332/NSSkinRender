@@ -7,6 +7,13 @@
 
 import SceneKit
 
+/// Container for body node hierarchy
+struct BodyNodes {
+  let group: SCNNode
+  let base: SCNNode
+  let overlay: SCNNode
+}
+
 extension CharacterNodeBuilder {
 
   // MARK: - Body
@@ -14,7 +21,13 @@ extension CharacterNodeBuilder {
   func buildBody(
     skinImage: NSImage,
     parent: SCNNode
-  ) -> (base: SCNNode, overlay: SCNNode) {
+  ) -> BodyNodes {
+    // Body group positioned at body center
+    let bodyGroup = SCNNode()
+    bodyGroup.name = "BodyGroup"
+    bodyGroup.position = SCNVector3(0, CharacterDimensions.bodyY, 0)
+    parent.addChildNode(bodyGroup)
+
     // Base body
     let bodyGeometry = SCNBox(
       width: CharacterDimensions.bodyWidth,
@@ -25,8 +38,8 @@ extension CharacterNodeBuilder {
     bodyGeometry.materials = materialFactory.createBodyMaterials(from: skinImage, isJacket: false)
     let bodyNode = SCNNode(geometry: bodyGeometry)
     bodyNode.name = "Body"
-    bodyNode.position = SCNVector3(0, CharacterDimensions.bodyY, 0)
-    parent.addChildNode(bodyNode)
+    bodyNode.position = SCNVector3Zero
+    bodyGroup.addChildNode(bodyNode)
 
     // Jacket layer
     let jacketGeometry = SCNBox(
@@ -38,9 +51,13 @@ extension CharacterNodeBuilder {
     jacketGeometry.materials = materialFactory.createBodyMaterials(from: skinImage, isJacket: true)
     let jacketNode = SCNNode(geometry: jacketGeometry)
     jacketNode.name = "Jacket"
-    jacketNode.position = SCNVector3(0, CharacterDimensions.bodyY, 0)
-    parent.addChildNode(jacketNode)
+    jacketNode.position = SCNVector3Zero
+    bodyGroup.addChildNode(jacketNode)
 
-    return (bodyNode, jacketNode)
+    return BodyNodes(
+      group: bodyGroup,
+      base: bodyNode,
+      overlay: jacketNode
+    )
   }
 }
