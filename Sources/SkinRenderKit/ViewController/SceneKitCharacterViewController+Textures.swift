@@ -12,7 +12,7 @@ extension SceneKitCharacterViewController {
     if let image = NSImage(contentsOfFile: texturePath) {
       self.skinImage = image
     } else {
-      loadDefaultTextureIfNeeded()
+      ensureDefaultTextureLoaded(rebuild: false)
     }
   }
 
@@ -24,16 +24,19 @@ extension SceneKitCharacterViewController {
 
   /// Load default texture only if no skin is set (does not rebuild)
   /// Used during initialization
-  func loadDefaultTextureIfNeeded() {
+  func ensureDefaultTextureLoaded(rebuild: Bool) {
     guard skinImage == nil else { return }
     self.skinImage = EmbeddedTextures.alexImage
+
+    if rebuild {
+      rebuildCharacter()
+    }
   }
 
   /// Public method for updateNSViewController - skips if skin already loaded
   public func loadDefaultTexture() {
     // Skip if we already have a skin image or a custom path was set
     guard skinImage == nil && skinTexturePath == nil else { return }
-    loadDefaultTextureIfNeeded()
-    rebuildCharacter()
+    ensureDefaultTextureLoaded(rebuild: true)
   }
 }

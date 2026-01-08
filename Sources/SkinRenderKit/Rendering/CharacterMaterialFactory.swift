@@ -166,39 +166,15 @@ public final class CharacterMaterialFactory {
           finalImage = croppedImage
         }
 
-        material.diffuse.contents = finalImage
-        material.diffuse.magnificationFilter = .nearest
-        material.diffuse.minificationFilter = .nearest
-        material.diffuse.wrapS = .clamp
-        material.diffuse.wrapT = .clamp
-
-        // Cape transparency handling
-        if TextureProcessor.hasTransparentPixels(croppedImage) {
-          material.transparency = 1.0
-          material.blendMode = .alpha
-        } else {
-          material.transparency = 1.0
-          material.blendMode = .alpha
-        }
-
-        // Cape should be double-sided for realistic cloth appearance
-        material.isDoubleSided = true
-
-        // Phong lighting for better visual depth
-        material.lightingModel = .phong
-        material.shininess = 0.1
-
-        // Subtle ambient and specular properties
-        material.ambient.contents = NSColor.black.withAlphaComponent(0.2)
-        material.specular.contents = NSColor.white.withAlphaComponent(0.1)
+        configureBaseMaterialProperties(material, image: finalImage)
+        configureTransparency(material, transparency: 1.0, isDoubleSided: true)
+        configurePhongLighting(material, shininess: 0.1)
 
       case .failure:
         // Fallback material
         material.diffuse.contents = NSColor.red.withAlphaComponent(0.8)
-        material.transparency = 0.8
-        material.blendMode = .alpha
-        material.isDoubleSided = true
-        material.lightingModel = .phong
+        configureTransparency(material, transparency: 0.8, isDoubleSided: true)
+        configurePhongLighting(material)
       }
 
       materials.append(material)
@@ -254,26 +230,20 @@ public final class CharacterMaterialFactory {
           finalImage = croppedImage
         }
 
-        material.diffuse.contents = finalImage
-        material.diffuse.magnificationFilter = .nearest
-        material.diffuse.minificationFilter = .nearest
-        material.diffuse.wrapS = .clamp
-        material.diffuse.wrapT = .clamp
+        configureBaseMaterialProperties(material, image: finalImage)
 
         // Set transparency for outer layers
         if isOuter {
-          if TextureProcessor.hasTransparentPixels(finalImage) {
-            material.transparency = 1.0
-            material.blendMode = .alpha
-            material.isDoubleSided = true
-          } else {
-            material.transparency = 0.9
-            material.blendMode = .alpha
-          }
+          let hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
+          configureTransparency(
+            material,
+            transparency: hasTransparency ? 1.0 : 0.9,
+            isDoubleSided: hasTransparency
+          )
         }
 
         // Use lambert lighting model for proper shading response to scene lights
-        material.lightingModel = .lambert
+        configureLambertLighting(material)
 
       case .failure:
         // Fallback material for failed crops
@@ -302,37 +272,77 @@ public final class CharacterMaterialFactory {
 
     switch TextureProcessor.crop(elytraImage, rect: spec.rect) {
     case .success(let croppedImage):
-      material.diffuse.contents = croppedImage
-      material.diffuse.magnificationFilter = .nearest
-      material.diffuse.minificationFilter = .nearest
-      material.diffuse.wrapS = .clamp
-      material.diffuse.wrapT = .clamp
-
-      // Enable transparency for elytra
-      material.transparency = 1.0
-      material.blendMode = .alpha
-
-      // Double-sided rendering for realistic wing appearance
-      material.isDoubleSided = true
-
-      // Use phong lighting for more realistic shading
-      material.lightingModel = .phong
-      material.shininess = 0.2
-
-      // Add subtle ambient and specular highlights
-      material.ambient.contents = NSColor.black.withAlphaComponent(0.2)
-      material.specular.contents = NSColor.white.withAlphaComponent(0.15)
+      configureBaseMaterialProperties(material, image: croppedImage)
+      configureTransparency(material, transparency: 1.0, isDoubleSided: true)
+      configurePhongLighting(
+        material,
+        shininess: 0.2,
+        specular: NSColor.white.withAlphaComponent(0.15)
+      )
 
     case .failure:
       // Fallback material
       material.diffuse.contents = NSColor.purple.withAlphaComponent(0.8)
-      material.transparency = 0.8
-      material.blendMode = .alpha
-      material.isDoubleSided = true
-      material.lightingModel = .phong
+      configureTransparency(material, transparency: 0.8, isDoubleSided: true)
+      configurePhongLighting(material)
     }
 
     return material
+  }
+
+  // MARK: - Material Configuration Helpers
+
+  /// Configure base material properties for texture rendering
+  /// - Parameters:
+  ///   - material: The material to configure
+  ///   - image: The texture image to apply
+  private func configureBaseMaterialProperties(_ material: SCNMaterial, image: NSImage) {
+    material.diffuse.contents = image
+    material.diffuse.magnificationFilter = .nearest
+    material.diffuse.minificationFilter = .nearest
+    material.diffuse.wrapS = .clamp
+    material.diffuse.wrapT = .clamp
+  }
+
+  /// Configure Phong lighting model with specular highlights
+  /// - Parameters:
+  ///   - material: The material to configure
+  ///   - shininess: Material shininess (0.0-1.0)
+  ///   - ambient: Ambient color intensity
+  ///   - specular: Specular highlight intensity
+  private func configurePhongLighting(
+    _ material: SCNMaterial,
+    shininess: CGFloat = 0.1,
+    ambient: NSColor = NSColor.black.withAlphaComponent(0.2),
+    specular: NSColor = NSColor.white.withAlphaComponent(0.1)
+  ) {
+    material.lightingModel = .phong
+    material.shininess = shininess
+    material.ambient.contents = ambient
+    material.specular.contents = specular
+  }
+
+  /// Configure Lambert lighting model
+  /// - Parameter material: The material to configure
+  private func configureLambertLighting(_ material: SCNMaterial) {
+    material.lightingModel = .lambert
+  }
+
+  /// Configure transparency and blending for materials
+  /// - Parameters:
+  ///   - material: The material to configure
+  ///   - transparency: Transparency value (0.0-1.0, where 1.0 is fully opaque)
+  ///   - isDoubleSided: Whether the material should be double-sided
+  private func configureTransparency(
+    _ material: SCNMaterial,
+    transparency: CGFloat = 1.0,
+    isDoubleSided: Bool = false
+  ) {
+    material.transparency = transparency
+    material.blendMode = .alpha
+    if isDoubleSided {
+      material.isDoubleSided = true
+    }
   }
 
   // MARK: - Material Updates

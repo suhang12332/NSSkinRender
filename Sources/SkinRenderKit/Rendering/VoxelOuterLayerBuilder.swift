@@ -121,6 +121,18 @@ final class VoxelOuterLayerBuilder {
 
   // MARK: - Voxel Helpers
 
+  /// Configure base material properties for color-based rendering
+  /// - Parameters:
+  ///   - material: The material to configure
+  ///   - color: The color to apply
+  private func configureBaseMaterialProperties(_ material: SCNMaterial, color: NSColor) {
+    material.diffuse.contents = color
+    material.diffuse.magnificationFilter = .nearest
+    material.diffuse.minificationFilter = .nearest
+    material.isDoubleSided = true
+    material.lightingModel = .lambert
+  }
+
   /// Create a single voxel node with the given color and position.
   private func createVoxelNode(
     color: NSColor,
@@ -129,11 +141,7 @@ final class VoxelOuterLayerBuilder {
   ) -> SCNNode {
     let voxelGeometry = SCNBox(width: size, height: size, length: size, chamferRadius: 0)
     let material = SCNMaterial()
-    material.diffuse.contents = color
-    material.diffuse.magnificationFilter = .nearest
-    material.diffuse.minificationFilter = .nearest
-    material.isDoubleSided = true
-    material.lightingModel = .lambert
+    configureBaseMaterialProperties(material, color: color)
 
     voxelGeometry.materials = [material]
 
