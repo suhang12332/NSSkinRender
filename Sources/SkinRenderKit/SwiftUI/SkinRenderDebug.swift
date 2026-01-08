@@ -23,7 +23,7 @@ public struct SkinRenderDebug: View {
 
   public init(
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray
+    backgroundColor: NSColor = .clear
   ) {
     self._rotationDuration = State(initialValue: rotationDuration)
     self._backgroundColor = State(initialValue: backgroundColor)

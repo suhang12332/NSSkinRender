@@ -35,7 +35,7 @@ public class SceneKitCharacterViewController: NSViewController {
 
   var playerModel: PlayerModel = .steve
   var rotationDuration: TimeInterval = 15.0
-  var backgroundColor: NSColor = .gray
+  var backgroundColor: NSColor = .clear
   var debugMode: Bool = false
 
   // MARK: - Bottom Face Configuration
@@ -185,5 +185,8 @@ public class SceneKitCharacterViewController: NSViewController {
     // Apply visibility state
     nodes.setOuterLayersHidden(!showOuterLayers)
     nodes.setCapeHidden(!showCape)
+
+    // Enable shadow casting for character
+    enableShadowCasting(for: nodes.root)
   }
 }

@@ -45,7 +45,7 @@ public struct SkinRenderView: View {
     capeTexturePath: String? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
@@ -66,7 +66,7 @@ public struct SkinRenderView: View {
     capeImage: NSImage? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
@@ -87,7 +87,7 @@ public struct SkinRenderView: View {
     capeImage: NSImage,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {

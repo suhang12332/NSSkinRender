@@ -37,13 +37,16 @@ extension CharacterNodeBuilder {
     headNode.position = SCNVector3Zero
     headGroup.addChildNode(headNode)
 
-    // Hat layer
+    // Hat layer (voxelized outer layer)
     let hatSize = CharacterDimensions.hatSize
-    let hatGeometry = SCNBox(width: hatSize, height: hatSize, length: hatSize, chamferRadius: 0)
-    hatGeometry.materials = materialFactory.createHeadMaterials(from: skinImage, isHat: true)
-    let hatNode = SCNNode(geometry: hatGeometry)
-    hatNode.name = "Hat"
-    hatNode.position = SCNVector3Zero
+    let hatBoxSize = SCNVector3(hatSize, hatSize, hatSize)
+    let hatNode = voxelBuilder.buildVoxelOverlay(
+      from: skinImage,
+      specs: CubeFace.headHat,
+      boxSize: hatBoxSize,
+      position: SCNVector3Zero,
+      name: "Hat"
+    )
     headGroup.addChildNode(hatNode)
 
     return HeadNodes(

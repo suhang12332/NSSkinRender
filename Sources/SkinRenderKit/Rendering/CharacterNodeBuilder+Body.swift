@@ -41,17 +41,19 @@ extension CharacterNodeBuilder {
     bodyNode.position = SCNVector3Zero
     bodyGroup.addChildNode(bodyNode)
 
-    // Jacket layer
-    let jacketGeometry = SCNBox(
-      width: CharacterDimensions.jacketWidth,
-      height: CharacterDimensions.jacketHeight,
-      length: CharacterDimensions.jacketDepth,
-      chamferRadius: 0
+    // Jacket layer (voxelized outer layer)
+    let jacketBoxSize = SCNVector3(
+      CharacterDimensions.jacketWidth,
+      CharacterDimensions.jacketHeight,
+      CharacterDimensions.jacketDepth
     )
-    jacketGeometry.materials = materialFactory.createBodyMaterials(from: skinImage, isJacket: true)
-    let jacketNode = SCNNode(geometry: jacketGeometry)
-    jacketNode.name = "Jacket"
-    jacketNode.position = SCNVector3Zero
+    let jacketNode = voxelBuilder.buildVoxelOverlay(
+      from: skinImage,
+      specs: CubeFace.bodyJacket,
+      boxSize: jacketBoxSize,
+      position: SCNVector3Zero,
+      name: "Jacket"
+    )
     bodyGroup.addChildNode(jacketNode)
 
     return BodyNodes(

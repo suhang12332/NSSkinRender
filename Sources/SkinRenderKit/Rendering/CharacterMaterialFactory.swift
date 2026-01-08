@@ -272,7 +272,8 @@ public final class CharacterMaterialFactory {
           }
         }
 
-        material.lightingModel = .constant
+        // Use lambert lighting model for proper shading response to scene lights
+        material.lightingModel = .lambert
 
       case .failure:
         // Fallback material for failed crops

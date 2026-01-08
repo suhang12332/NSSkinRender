@@ -31,7 +31,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     capeTexturePath: String? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.texturePath = texturePath
@@ -50,7 +50,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     capeImage: NSImage? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.texturePath = nil
@@ -69,7 +69,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     capeImage: NSImage,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.texturePath = texturePath
@@ -88,7 +88,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     capeTexturePath: String,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.texturePath = nil

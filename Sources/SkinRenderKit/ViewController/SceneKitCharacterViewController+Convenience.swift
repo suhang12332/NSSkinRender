@@ -12,7 +12,7 @@ extension SceneKitCharacterViewController {
   public static func presentInNewWindow(
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray
+    backgroundColor: NSColor = .clear
   ) {
     let characterVC = SceneKitCharacterViewController(
       playerModel: playerModel,
@@ -43,7 +43,7 @@ extension SceneKitCharacterViewController {
     capeImage: NSImage? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init()
@@ -69,7 +69,7 @@ extension SceneKitCharacterViewController {
     texturePath: String,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(
@@ -86,7 +86,7 @@ extension SceneKitCharacterViewController {
     capeTexturePath: String? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(
@@ -102,7 +102,7 @@ extension SceneKitCharacterViewController {
   public convenience init(
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(
@@ -121,7 +121,7 @@ extension SceneKitCharacterViewController {
     skinImage: NSImage,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(
@@ -141,7 +141,7 @@ extension SceneKitCharacterViewController {
     capeImage: NSImage? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(
@@ -161,7 +161,7 @@ extension SceneKitCharacterViewController {
     capeImage: NSImage,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .gray,
+    backgroundColor: NSColor = .clear,
     debugMode: Bool = false
   ) {
     self.init(

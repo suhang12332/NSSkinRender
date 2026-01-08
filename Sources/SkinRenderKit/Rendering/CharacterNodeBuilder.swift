@@ -119,11 +119,13 @@ public final class CharacterNodeBuilder {
   // MARK: - Dependencies
 
   let materialFactory: CharacterMaterialFactory
+  let voxelBuilder: VoxelOuterLayerBuilder
 
   // MARK: - Initialization
 
   public init(materialFactory: CharacterMaterialFactory) {
     self.materialFactory = materialFactory
+    self.voxelBuilder = VoxelOuterLayerBuilder()
   }
 
   // MARK: - Build Character
