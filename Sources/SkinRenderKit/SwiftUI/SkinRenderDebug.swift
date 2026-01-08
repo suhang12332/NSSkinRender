@@ -15,7 +15,7 @@ public struct SkinRenderDebug: View {
   // MARK: - State
 
   @State private var selectedTexturePath: String?
-  @State private var selectedCapeTexturePath: String?
+  @State private var selectedCapeImage: NSImage?
   @State private var rotationDuration: TimeInterval
   @State private var backgroundColor: NSColor
 
@@ -60,7 +60,7 @@ public struct SkinRenderDebug: View {
       // Character view
       SceneKitCharacterViewRepresentable(
         texturePath: selectedTexturePath,
-        capeTexturePath: selectedCapeTexturePath,
+        capeImage: selectedCapeImage,
         rotationDuration: rotationDuration,
         backgroundColor: backgroundColor,
         debugMode: true
@@ -88,19 +88,18 @@ public struct SkinRenderDebug: View {
         }
       }
 
-      if let path = selectedCapeTexturePath {
+      if selectedCapeImage != nil {
         HStack {
           Text("Cape:")
             .font(.caption)
             .foregroundColor(.secondary)
-          Text(URL(fileURLWithPath: path).lastPathComponent)
+          Text("Loaded (64x32)")
             .font(.caption)
             .foregroundColor(.primary)
             .lineLimit(1)
-            .truncationMode(.middle)
 
           Button("✕") {
-            selectedCapeTexturePath = nil
+            selectedCapeImage = nil
           }
           .font(.caption)
           .foregroundColor(.secondary)
@@ -181,7 +180,9 @@ public struct SkinRenderDebug: View {
 
     panel.begin { response in
       if response == .OK, let url = panel.url {
-        selectedCapeTexturePath = url.path
+        if let image = NSImage(contentsOf: url) {
+          selectedCapeImage = image
+        }
       }
     }
   }

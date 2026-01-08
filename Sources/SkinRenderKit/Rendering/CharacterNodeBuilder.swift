@@ -186,12 +186,6 @@ public final class CharacterNodeBuilder {
       // Build cape only if no elytra
       let capeNodes = buildCape(capeImage: capeImage, parent: root)
       nodes.setCape(pivot: capeNodes.pivot, cape: capeNodes.cape)
-    } else {
-      // Try to load default cape from bundle if neither elytra nor cape provided
-      if let defaultCape = loadDefaultCapeTexture() {
-        let capeNodes = buildCape(capeImage: defaultCape, parent: root)
-        nodes.setCape(pivot: capeNodes.pivot, cape: capeNodes.cape)
-      }
     }
 
     // Set rendering priorities

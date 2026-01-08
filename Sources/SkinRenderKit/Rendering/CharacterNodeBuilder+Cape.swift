@@ -41,10 +41,4 @@ extension CharacterNodeBuilder {
 
     return (capePivotNode, capeNode)
   }
-
-  // MARK: - Default Cape
-
-  func loadDefaultCapeTexture() -> NSImage? {
-    EmbeddedTextures.capeImage
-  }
 }
