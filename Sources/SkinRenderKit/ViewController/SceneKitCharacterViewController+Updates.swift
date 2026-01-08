@@ -7,24 +7,56 @@ import SceneKit
 
 extension SceneKitCharacterViewController {
 
-  // MARK: - Public Update Methods
+  // MARK: - Internal Update Helpers
 
-  public func updateTexture(path: String) {
-    // Skip if path unchanged
-    guard skinTexturePath != path else { return }
-    self.skinTexturePath = path
-    loadTexture()
-    if skinImage != nil {
+  private func applySkinUpdate(path: String? = nil, image: NSImage? = nil) {
+    if let path = path {
+      // Skip if path unchanged
+      guard skinTexturePath != path else { return }
+      self.skinTexturePath = path
+      loadTexture()
+      if skinImage != nil {
+        rebuildCharacter()
+      }
+      return
+    }
+
+    if let image = image {
+      // Skip if same image instance
+      guard skinImage !== image else { return }
+      self.skinImage = image
+      self.skinTexturePath = nil
       rebuildCharacter()
     }
   }
 
+  private func applyCapeUpdate(path: String? = nil, image: NSImage? = nil) {
+    if let path = path {
+      // Skip if path unchanged
+      guard capeTexturePath != path else { return }
+      self.capeTexturePath = path
+      loadCapeTexture(from: path)
+      rebuildCharacter()
+      return
+    }
+
+    if let image = image {
+      // Skip if same image instance
+      guard capeImage !== image else { return }
+      self.capeImage = image
+      self.capeTexturePath = nil
+      rebuildCharacter()
+    }
+  }
+
+  // MARK: - Public Update Methods
+
+  public func updateTexture(path: String) {
+    applySkinUpdate(path: path)
+  }
+
   public func updateTexture(image: NSImage) {
-    // Skip if same image instance
-    guard skinImage !== image else { return }
-    self.skinImage = image
-    self.skinTexturePath = nil
-    rebuildCharacter()
+    applySkinUpdate(image: image)
   }
 
   public func updateRotationDuration(_ duration: TimeInterval) {
@@ -42,19 +74,11 @@ extension SceneKitCharacterViewController {
   }
 
   public func updateCapeTexture(path: String) {
-    // Skip if path unchanged
-    guard capeTexturePath != path else { return }
-    self.capeTexturePath = path
-    loadCapeTexture(from: path)
-    rebuildCharacter()
+    applyCapeUpdate(path: path)
   }
 
   public func updateCapeTexture(image: NSImage) {
-    // Skip if same image instance
-    guard capeImage !== image else { return }
-    self.capeImage = image
-    self.capeTexturePath = nil
-    rebuildCharacter()
+    applyCapeUpdate(image: image)
   }
 
   public func removeCapeTexture() {

@@ -143,7 +143,7 @@ public class SceneKitCharacterViewController: NSViewController {
     super.viewDidLoad()
 
     // Load default texture if none set
-    loadDefaultTextureIfNeeded()
+    ensureDefaultTextureLoaded(rebuild: false)
 
     setupScene()
     rebuildCharacter()
