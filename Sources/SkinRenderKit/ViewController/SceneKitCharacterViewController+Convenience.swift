@@ -35,7 +35,7 @@ extension SceneKitCharacterViewController {
 
 extension SceneKitCharacterViewController {
 
-  /// Primary convenience initializer - all other initializers delegate to this one
+  /// Primary convenience initializer - shared setup
   private convenience init(
     skinTexturePath: String? = nil,
     skinImage: NSImage? = nil,
@@ -56,7 +56,6 @@ extension SceneKitCharacterViewController {
     self.backgroundColor = backgroundColor
     self.debugMode = debugMode
 
-    // Load textures if paths provided
     if skinTexturePath != nil {
       loadTexture()
     }
@@ -65,24 +64,9 @@ extension SceneKitCharacterViewController {
     }
   }
 
+  /// Init with texture paths (cape optional)
   public convenience init(
-    texturePath: String,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .clear,
-    debugMode: Bool = false
-  ) {
-    self.init(
-      skinTexturePath: texturePath,
-      playerModel: playerModel,
-      rotationDuration: rotationDuration,
-      backgroundColor: backgroundColor,
-      debugMode: debugMode
-    )
-  }
-
-  public convenience init(
-    texturePath: String,
+    texturePath: String? = nil,
     capeTexturePath: String? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
@@ -91,24 +75,8 @@ extension SceneKitCharacterViewController {
   ) {
     self.init(
       skinTexturePath: texturePath,
-      capeTexturePath: capeTexturePath,
-      playerModel: playerModel,
-      rotationDuration: rotationDuration,
-      backgroundColor: backgroundColor,
-      debugMode: debugMode
-    )
-  }
-
-  public convenience init(
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .clear,
-    debugMode: Bool = false
-  ) {
-    self.init(
-      skinTexturePath: nil,
       skinImage: nil,
-      capeTexturePath: nil,
+      capeTexturePath: capeTexturePath,
       capeImage: nil,
       playerModel: playerModel,
       rotationDuration: rotationDuration,
@@ -117,25 +85,7 @@ extension SceneKitCharacterViewController {
     )
   }
 
-  public convenience init(
-    skinImage: NSImage,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .clear,
-    debugMode: Bool = false
-  ) {
-    self.init(
-      skinTexturePath: nil,
-      skinImage: skinImage,
-      capeTexturePath: nil,
-      capeImage: nil,
-      playerModel: playerModel,
-      rotationDuration: rotationDuration,
-      backgroundColor: backgroundColor,
-      debugMode: debugMode
-    )
-  }
-
+  /// Init with in-memory images (cape optional)
   public convenience init(
     skinImage: NSImage,
     capeImage: NSImage? = nil,
@@ -148,24 +98,6 @@ extension SceneKitCharacterViewController {
       skinTexturePath: nil,
       skinImage: skinImage,
       capeTexturePath: nil,
-      capeImage: capeImage,
-      playerModel: playerModel,
-      rotationDuration: rotationDuration,
-      backgroundColor: backgroundColor,
-      debugMode: debugMode
-    )
-  }
-
-  public convenience init(
-    texturePath: String? = nil,
-    capeImage: NSImage,
-    playerModel: PlayerModel = .steve,
-    rotationDuration: TimeInterval = 15.0,
-    backgroundColor: NSColor = .clear,
-    debugMode: Bool = false
-  ) {
-    self.init(
-      skinTexturePath: texturePath,
       capeImage: capeImage,
       playerModel: playerModel,
       rotationDuration: rotationDuration,

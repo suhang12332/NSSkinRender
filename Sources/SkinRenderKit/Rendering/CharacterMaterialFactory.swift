@@ -344,14 +344,4 @@ public final class CharacterMaterialFactory {
       material.isDoubleSided = true
     }
   }
-
-  // MARK: - Material Updates
-
-  /// Update materials on existing geometry without rebuilding nodes
-  /// - Parameters:
-  ///   - geometry: The geometry to update
-  ///   - materials: New materials to apply
-  public func updateMaterials(on geometry: SCNGeometry?, with materials: [SCNMaterial]) {
-    geometry?.materials = materials
-  }
 }
