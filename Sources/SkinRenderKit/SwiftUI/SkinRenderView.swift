@@ -263,7 +263,7 @@ public struct SkinRenderView: View {
   }
 
   private func showDropError(_ message: String) {
-    print("Drop error: \(message)")
+    // 调试日志已去掉，如需用户可见的提示可在此处添加 UI 呈现逻辑
   }
 
   // MARK: - File Import
