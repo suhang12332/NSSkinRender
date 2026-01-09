@@ -78,4 +78,94 @@ extension CharacterNodeBuilder {
   private func applyXOffset(to node: SCNNode, offset: Float) {
     node.position.x += CGFloat(offset)
   }
+
+  // MARK: - Outer Layer Rebuild Helpers
+
+  /// Rebuild voxel-based outer layers (hat, jacket, sleeves) using a new skin image.
+  ///
+  /// This keeps the base geometry intact and only refreshes the voxel overlays so that
+  /// they fully follow the latest skin texture.
+  func rebuildOuterLayerVoxels(
+    _ nodes: CharacterNodes,
+    skinImage: NSImage,
+    playerModel: PlayerModel
+  ) {
+    // Head hat
+    let hatSize = CharacterDimensions.hatSize
+    let hatBoxSize = SCNVector3(hatSize, hatSize, hatSize)
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.hat,
+      from: skinImage,
+      specs: CubeFace.headHat,
+      boxSize: hatBoxSize
+    )
+
+    // Body jacket
+    let jacketBoxSize = SCNVector3(
+      CharacterDimensions.jacketWidth,
+      CharacterDimensions.jacketHeight,
+      CharacterDimensions.jacketDepth
+    )
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.jacket,
+      from: skinImage,
+      specs: CubeFace.bodyJacket,
+      boxSize: jacketBoxSize
+    )
+
+    // Arms sleeves
+    let armDimensions = playerModel.armDimensions
+    let armSleeveDimensions = playerModel.armSleeveDimensions
+    let armSleeveBoxSize = SCNVector3(
+      armSleeveDimensions.width,
+      armSleeveDimensions.height,
+      armSleeveDimensions.length
+    )
+
+    let rightArmSleeveSpecs = CubeFace.armSleeve(
+      isLeft: false,
+      armWidth: armDimensions.width
+    )
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.rightArmSleeve,
+      from: skinImage,
+      specs: rightArmSleeveSpecs,
+      boxSize: armSleeveBoxSize
+    )
+
+    let leftArmSleeveSpecs = CubeFace.armSleeve(
+      isLeft: true,
+      armWidth: armDimensions.width
+    )
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.leftArmSleeve,
+      from: skinImage,
+      specs: leftArmSleeveSpecs,
+      boxSize: armSleeveBoxSize
+    )
+
+    // Legs sleeves
+    let legSleeveDimensions = playerModel.legSleeveDimensions
+    let legSleeveBoxSize = SCNVector3(
+      legSleeveDimensions.width,
+      legSleeveDimensions.height,
+      legSleeveDimensions.length
+    )
+
+    let rightLegSleeveSpecs = CubeFace.legSleeve(isLeft: false)
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.rightLegSleeve,
+      from: skinImage,
+      specs: rightLegSleeveSpecs,
+      boxSize: legSleeveBoxSize
+    )
+
+    let leftLegSleeveSpecs = CubeFace.legSleeve(isLeft: true)
+    voxelBuilder.rebuildVoxelOverlay(
+      in: nodes.leftLegSleeve,
+      from: skinImage,
+      specs: leftLegSleeveSpecs,
+      boxSize: legSleeveBoxSize
+    )
+  }
 }

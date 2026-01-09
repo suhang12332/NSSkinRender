@@ -229,26 +229,11 @@ extension SceneKitCharacterViewController {
       )
     }
 
-    // 2. 外层体素（Hat / Jacket / Sleeves）直接按像素重算颜色
-    func refreshVoxelColors(in overlayNode: SCNNode) {
-      overlayNode.enumerateChildNodes { child, _ in
-        if let box = child.geometry as? SCNBox,
-           let material = box.materials.first,
-           let color = material.diffuse.contents as? NSColor {
-          // 这里无法从旧 color 反推回皮肤坐标，因此简单方案是保留原 color。
-          // 如需完全跟随新皮肤贴图，需要在 VoxelOuterLayerBuilder 中记录每个 voxel 对应的 UV / face / 像素坐标。
-          material.diffuse.contents = color
-        }
-      }
-    }
-
-    // 当前版本：基础几何已经完全跟新皮肤，外层体素依旧使用旧颜色。
-    // 如果你之后希望外层也 100% 跟随贴图变化，可以再扩展 VoxelOuterLayerBuilder 做精细映射。
-    refreshVoxelColors(in: nodes.hat)
-    refreshVoxelColors(in: nodes.jacket)
-    refreshVoxelColors(in: nodes.rightArmSleeve)
-    refreshVoxelColors(in: nodes.leftArmSleeve)
-    refreshVoxelColors(in: nodes.rightLegSleeve)
-    refreshVoxelColors(in: nodes.leftLegSleeve)
+    // 2. 外层体素（Hat / Jacket / Sleeves）完全根据新皮肤贴图重建
+    nodeBuilder.rebuildOuterLayerVoxels(
+      nodes,
+      skinImage: image,
+      playerModel: playerModel
+    )
   }
 }

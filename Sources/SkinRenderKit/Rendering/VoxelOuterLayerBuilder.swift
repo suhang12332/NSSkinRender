@@ -44,6 +44,56 @@ final class VoxelOuterLayerBuilder {
     // Slightly higher rendering order to ensure overlays render on top of base layers.
     containerNode.renderingOrder = CharacterDimensions.RenderingOrder.outerLayers
 
+    populateVoxelOverlay(
+      in: containerNode,
+      from: skinImage,
+      specs: specs,
+      boxSize: boxSize,
+      voxelSize: voxelSize
+    )
+
+    return containerNode
+  }
+
+  /// Rebuild an existing voxel overlay node with a new skin image.
+  ///
+  /// - Parameters:
+  ///   - containerNode: Existing overlay container node whose children will be replaced.
+  ///   - skinImage: The new Minecraft skin texture image.
+  ///   - specs: Face specifications defining crop rectangles (same semantics as buildVoxelOverlay).
+  ///   - boxSize: The approximate outer box size that the voxels should occupy.
+  ///   - voxelSize: Logical size of each voxel.
+  func rebuildVoxelOverlay(
+    in containerNode: SCNNode,
+    from skinImage: NSImage,
+    specs: [CubeFace.Spec],
+    boxSize: SCNVector3,
+    voxelSize: CGFloat = 1.0
+  ) {
+    // Clear existing voxels
+    containerNode.childNodes.forEach { $0.removeFromParentNode() }
+
+    // Repopulate with new skin data
+    populateVoxelOverlay(
+      in: containerNode,
+      from: skinImage,
+      specs: specs,
+      boxSize: boxSize,
+      voxelSize: voxelSize
+    )
+  }
+
+  // MARK: - Voxel Population Core
+
+  /// Core implementation that fills a container node with voxel children
+  /// based on a skin image and face specifications.
+  private func populateVoxelOverlay(
+    in containerNode: SCNNode,
+    from skinImage: NSImage,
+    specs: [CubeFace.Spec],
+    boxSize: SCNVector3,
+    voxelSize: CGFloat
+  ) {
     // Small inward offset so voxels sit just above the base geometry without Z-fighting.
     let halfThickness: CGFloat = 0.5
 
@@ -115,8 +165,6 @@ final class VoxelOuterLayerBuilder {
         }
       }
     }
-
-    return containerNode
   }
 
   // MARK: - Voxel Helpers
