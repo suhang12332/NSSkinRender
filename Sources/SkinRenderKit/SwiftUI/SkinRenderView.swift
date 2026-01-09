@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 internal import UniformTypeIdentifiers
 
 /// Main SwiftUI View for rendering Minecraft character skins
@@ -17,6 +18,7 @@ public struct SkinRenderView: View {
   @State private var texturePath: String?
   @State private var skinImage: NSImage?
   @State private var capeImage: NSImage?
+  @State private var renderKey: UUID = UUID()
 
   // MARK: - Configuration
 
@@ -115,7 +117,18 @@ public struct SkinRenderView: View {
         )
       }
     }
+    .id(renderKey) // 使用渲染键确保图像变化时视图更新
     .frame(minWidth: 400, minHeight: 300)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      showFileImporter()
+    }
+    .onDrop(
+      of: [UTType.image, UTType.fileURL, UTType.png, UTType.jpeg],
+      isTargeted: nil
+    ) { providers in
+      handleDrop(providers: providers, target: .skin)
+    }
   }
 
   // MARK: - Drop Handling
@@ -152,8 +165,10 @@ public struct SkinRenderView: View {
   private func handleSkinDrop(_ image: NSImage) {
     switch ImageDropHandler.validateSkin(image) {
     case .valid(let validImage):
+      // 皮肤变化时更新状态，这会触发重新渲染
       skinImage = validImage
       texturePath = nil
+      renderKey = UUID() // 更新渲染键以确保重新渲染
       onSkinDropped?(validImage)
     case .invalidDimensions(let width, let height, let expected):
       showDropError("Skin size error: \(width)×\(height), need \(expected)")
@@ -165,7 +180,9 @@ public struct SkinRenderView: View {
   private func handleCapeDrop(_ image: NSImage) {
     switch ImageDropHandler.validateCape(image) {
     case .valid(let validImage):
+      // 披风变化时更新状态，这会触发重新渲染
       capeImage = validImage
+      renderKey = UUID() // 更新渲染键以确保重新渲染
       onCapeDropped?(validImage)
     case .invalidDimensions(let width, let height, let expected):
       showDropError("Cape size error: \(width)×\(height), need \(expected)")
@@ -176,5 +193,32 @@ public struct SkinRenderView: View {
 
   private func showDropError(_ message: String) {
     print("Drop error: \(message)")
+  }
+
+  // MARK: - File Import
+
+  private func showFileImporter() {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [.png, .jpeg, .image]
+    panel.allowsMultipleSelection = false
+    panel.canChooseDirectories = false
+    panel.canChooseFiles = true
+    panel.prompt = "选择"
+    panel.message = "选择一个 Minecraft 皮肤纹理文件（64x64 或 64x32）"
+
+    panel.begin { response in
+      if response == .OK, let url = panel.url {
+        loadSkinFromFile(at: url)
+      }
+    }
+  }
+
+  private func loadSkinFromFile(at url: URL) {
+    guard let image = NSImage(contentsOf: url) else {
+      showDropError("无法读取图片文件")
+      return
+    }
+
+    handleSkinDrop(image)
   }
 }

@@ -36,7 +36,9 @@ extension SceneKitCharacterViewController {
       guard capeTexturePath != path else { return }
       self.capeTexturePath = path
       loadCapeTexture(from: path)
-      rebuildCharacter()
+      if capeImage != nil {
+        rebuildCharacter()
+      }
       return
     }
 
