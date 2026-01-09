@@ -70,8 +70,17 @@ final class VoxelOuterLayerBuilder {
     boxSize: SCNVector3,
     voxelSize: CGFloat = 1.0
   ) {
-    // Clear existing voxels
-    containerNode.childNodes.forEach { $0.removeFromParentNode() }
+    // Clear existing voxels and clean up resources
+    for child in containerNode.childNodes {
+      // Clean up geometry and materials before removing
+      if let geometry = child.geometry {
+        for material in geometry.materials {
+          material.diffuse.contents = nil
+        }
+        geometry.materials = []
+      }
+      child.removeFromParentNode()
+    }
 
     // Repopulate with new skin data
     populateVoxelOverlay(

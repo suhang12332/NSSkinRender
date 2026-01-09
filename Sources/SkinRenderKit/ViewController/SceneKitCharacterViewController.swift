@@ -152,14 +152,39 @@ public class SceneKitCharacterViewController: NSViewController {
     setupUI()
     setupGestureRecognizers()
   }
+  
+  public override func viewWillDisappear() {
+    super.viewWillDisappear()
+    // 页面即将关闭时立即停止动画和清理资源
+    cleanupResources()
+  }
+  
+  public override func viewDidDisappear() {
+    super.viewDidDisappear()
+    // 页面已关闭，确保所有资源都已释放
+    cleanupResources()
+  }
 
   // MARK: - Character Building
 
   func rebuildCharacter() {
-    // Remove existing character
-    characterNodes?.root.removeFromParentNode()
+    // Stop all animations before removing nodes
+    if let oldNodes = characterNodes {
+      animationController.resetAllAnimations()
+      // Remove all actions from nodes
+      oldNodes.root.removeAllActions()
+      oldNodes.root.childNodes.forEach { $0.removeAllActions() }
+    }
+    
+    // Remove existing character and clean up resources
+    if let oldRoot = characterNodes?.root {
+      // Recursively clean up geometry and materials
+      cleanupNode(oldRoot)
+      oldRoot.removeFromParentNode()
+    }
 
     guard let skinImage = skinImage else {
+      characterNodes = nil
       return
     }
 
@@ -188,5 +213,69 @@ public class SceneKitCharacterViewController: NSViewController {
 
     // Enable shadow casting for character
     enableShadowCasting(for: nodes.root)
+  }
+  
+  /// Recursively clean up node resources (geometry, materials, textures)
+  private func cleanupNode(_ node: SCNNode) {
+    // Clean up geometry and materials
+    if let geometry = node.geometry {
+      // Clear material contents to release texture references
+      for material in geometry.materials {
+        material.diffuse.contents = nil
+        material.ambient.contents = nil
+        material.specular.contents = nil
+        material.normal.contents = nil
+        material.emission.contents = nil
+      }
+      geometry.materials = []
+    }
+    
+    // Recursively clean up children
+    for child in node.childNodes {
+      cleanupNode(child)
+    }
+  }
+  
+  // MARK: - Cleanup
+  
+  /// 清理所有资源（在页面关闭时调用）
+  /// 可以手动调用以确保资源被释放
+  func cleanupResources() {
+    // Stop all animations
+    animationController.resetAllAnimations()
+    
+    // Clean up character nodes
+    if let root = characterNodes?.root {
+      // Remove all actions first
+      root.removeAllActions()
+      root.childNodes.forEach { $0.removeAllActions() }
+      
+      // Clean up geometry and materials
+      cleanupNode(root)
+      
+      // Remove from scene
+      root.removeFromParentNode()
+    }
+    
+    // Clear character nodes reference
+    characterNodes = nil
+    
+    // Clear SceneKit view resources to release GPU memory
+    scnView?.scene = nil
+    scnView?.delegate = nil
+    
+    // Clear scene reference
+    scene = nil
+  }
+  
+  deinit {
+    // 最终清理，确保所有资源都被释放
+    cleanupResources()
+    
+    // Clear texture references to help ARC release image memory
+    skinImage = nil
+    capeImage = nil
+    skinTexturePath = nil
+    capeTexturePath = nil
   }
 }

@@ -157,4 +157,14 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     nsViewController.updateRotationDuration(rotationDuration)
     nsViewController.updateBackgroundColor(backgroundColor)
   }
+  
+  /// 当 SwiftUI 视图被移除时调用，确保资源被释放
+  public static func dismantleNSViewController(
+    _ nsViewController: SceneKitCharacterViewController,
+    coordinator: Void
+  ) {
+    // 确保在视图被移除时清理资源
+    // viewWillDisappear 和 viewDidDisappear 会自动调用，但这里作为额外保障
+    nsViewController.cleanupResources()
+  }
 }
