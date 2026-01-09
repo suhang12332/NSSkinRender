@@ -179,10 +179,8 @@ public class SceneKitCharacterViewController: NSViewController {
     animationController.setupRotationAnimation()
     animationController.addCapeSwayAnimation()
 
-    // Resume walking if it was enabled
-    if animationController.walkingEnabled {
-      animationController.startWalkingAnimation()
-    }
+    // Start walking animation by default
+    animationController.startWalkingAnimation()
 
     // Apply visibility state
     nodes.setOuterLayersHidden(!showOuterLayers)

@@ -142,7 +142,7 @@ public enum CharacterDimensions {
   // MARK: - Camera
 
   /// Default camera position
-  public static let cameraPosition = SCNVector3(0, 16, 36)
+  public static let cameraPosition = SCNVector3(0, 6, 35)
 
   /// Default camera look-at target
   public static let cameraTarget = SCNVector3(0, 6, 0)
