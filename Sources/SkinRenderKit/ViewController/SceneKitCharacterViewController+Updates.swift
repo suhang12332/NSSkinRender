@@ -31,12 +31,21 @@ extension SceneKitCharacterViewController {
   }
 
   private func applyCapeUpdate(path: String? = nil, image: NSImage? = nil) {
+    print("[SceneKitCharacterViewController] applyCapeUpdate 被调用")
+    print("[SceneKitCharacterViewController]   path: \(path ?? "nil")")
+    print("[SceneKitCharacterViewController]   image: \(image != nil ? "有值" : "nil")")
+    
     if let path = path {
       // Skip if path unchanged
-      guard capeTexturePath != path else { return }
+      guard capeTexturePath != path else {
+        print("[SceneKitCharacterViewController] applyCapeUpdate 跳过：path 未变化")
+        return
+      }
+      print("[SceneKitCharacterViewController] applyCapeUpdate 更新 path")
       self.capeTexturePath = path
       loadCapeTexture(from: path)
       if capeImage != nil {
+        print("[SceneKitCharacterViewController] applyCapeUpdate 调用 rebuildCharacter()")
         rebuildCharacter()
       }
       return
@@ -44,7 +53,11 @@ extension SceneKitCharacterViewController {
 
     if let image = image {
       // Skip if same image instance
-      guard capeImage !== image else { return }
+      guard capeImage !== image else {
+        print("[SceneKitCharacterViewController] applyCapeUpdate 跳过：相同图像实例")
+        return
+      }
+      print("[SceneKitCharacterViewController] applyCapeUpdate 更新图像并重建")
       self.capeImage = image
       self.capeTexturePath = nil
       rebuildCharacter()
@@ -80,14 +93,26 @@ extension SceneKitCharacterViewController {
   }
 
   public func updateCapeTexture(image: NSImage) {
+    print("[SceneKitCharacterViewController] updateCapeTexture(image:) 被调用")
+    print("[SceneKitCharacterViewController] 当前 capeImage: \(capeImage != nil ? "有值" : "nil")")
+    print("[SceneKitCharacterViewController] 新 image: \(image != nil ? "有值" : "nil")")
+    print("[SceneKitCharacterViewController] 是否为相同实例: \(capeImage === image)")
     applyCapeUpdate(image: image)
   }
 
   public func removeCapeTexture() {
+    print("[SceneKitCharacterViewController] removeCapeTexture() 被调用")
+    print("[SceneKitCharacterViewController] 当前 capeImage: \(capeImage != nil ? "有值" : "nil")")
+    print("[SceneKitCharacterViewController] 当前 capeTexturePath: \(capeTexturePath ?? "nil")")
     // Skip if already no cape
-    guard capeImage != nil || capeTexturePath != nil else { return }
+    guard capeImage != nil || capeTexturePath != nil else {
+      print("[SceneKitCharacterViewController] removeCapeTexture() 跳过：没有披风需要移除")
+      return
+    }
+    print("[SceneKitCharacterViewController] removeCapeTexture() 执行移除操作")
     self.capeImage = nil
     self.capeTexturePath = nil
+    print("[SceneKitCharacterViewController] removeCapeTexture() 调用 rebuildCharacter()")
     rebuildCharacter()
   }
 

@@ -16,9 +16,35 @@ public struct SkinRenderView: View {
   // MARK: - State
 
   @State private var texturePath: String?
-  @State private var skinImage: NSImage?
-  @State private var capeImage: NSImage?
+  @State private var internalSkinImage: NSImage?
   @State private var renderKey: UUID = UUID()
+  
+  // 皮肤的外部绑定（可选）
+  private var externalSkinImageBinding: Binding<NSImage?>?
+  
+  // 皮肤路径的外部绑定（可选）
+  private var externalTexturePathBinding: Binding<String?>?
+  
+  // 披风的外部绑定（必需，披风只支持 Binding）
+  private var capeImageBinding: Binding<NSImage?>?
+  
+  // 用于跟踪外部绑定变化的辅助状态
+  @State private var externalCapeImageTracker: NSImage?
+  
+  // 计算属性：皮肤的当前值
+  private var currentSkinImage: NSImage? {
+    externalSkinImageBinding?.wrappedValue ?? internalSkinImage
+  }
+  
+  // 计算属性：皮肤路径的当前值
+  private var currentTexturePath: String? {
+    externalTexturePathBinding?.wrappedValue ?? texturePath
+  }
+  
+  // 计算属性：披风的当前值（只支持 Binding）
+  private var currentCapeImage: NSImage? {
+    capeImageBinding?.wrappedValue
+  }
 
   // MARK: - Configuration
 
@@ -33,10 +59,10 @@ public struct SkinRenderView: View {
 
   // MARK: - Initialization
 
-  /// Initialize with an optional texture path
+  /// Initialize with texture path for skin (cape must use Binding)
   public init(
     texturePath: String? = nil,
-    capeImage: NSImage? = nil,
+    capeImage: Binding<NSImage?>? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
     backgroundColor: NSColor = .clear,
@@ -44,8 +70,34 @@ public struct SkinRenderView: View {
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
     self._texturePath = State(initialValue: texturePath)
-    self._skinImage = State(initialValue: nil)
-    self._capeImage = State(initialValue: capeImage)
+    self._internalSkinImage = State(initialValue: nil)
+    self.externalSkinImageBinding = nil
+    self.externalTexturePathBinding = nil
+    self.capeImageBinding = capeImage
+    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.onSkinDropped = onSkinDropped
+    self.onCapeDropped = onCapeDropped
+  }
+  
+  /// Initialize with texture path binding for skin (cape must use Binding)
+  public init(
+    texturePath: Binding<String?>,
+    capeImage: Binding<NSImage?>? = nil,
+    playerModel: PlayerModel = .steve,
+    rotationDuration: TimeInterval = 15.0,
+    backgroundColor: NSColor = .clear,
+    onSkinDropped: ((NSImage) -> Void)? = nil,
+    onCapeDropped: ((NSImage) -> Void)? = nil
+  ) {
+    self._texturePath = State(initialValue: texturePath.wrappedValue)
+    self._internalSkinImage = State(initialValue: nil)
+    self.externalSkinImageBinding = nil
+    self.externalTexturePathBinding = texturePath
+    self.capeImageBinding = capeImage
+    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
     self.playerModel = playerModel
     self.rotationDuration = rotationDuration
     self.backgroundColor = backgroundColor
@@ -53,10 +105,10 @@ public struct SkinRenderView: View {
     self.onCapeDropped = onCapeDropped
   }
 
-  /// Initialize with a direct NSImage texture
+  /// Initialize with direct NSImage texture for skin (cape must use Binding)
   public init(
     skinImage: NSImage,
-    capeImage: NSImage? = nil,
+    capeImage: Binding<NSImage?>? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
     backgroundColor: NSColor = .clear,
@@ -64,28 +116,34 @@ public struct SkinRenderView: View {
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
     self._texturePath = State(initialValue: nil)
-    self._skinImage = State(initialValue: skinImage)
-    self._capeImage = State(initialValue: capeImage)
+    self._internalSkinImage = State(initialValue: skinImage)
+    self.externalSkinImageBinding = nil
+    self.externalTexturePathBinding = nil
+    self.capeImageBinding = capeImage
+    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
     self.playerModel = playerModel
     self.rotationDuration = rotationDuration
     self.backgroundColor = backgroundColor
     self.onSkinDropped = onSkinDropped
     self.onCapeDropped = onCapeDropped
   }
-
-  /// Initialize with mixed texture inputs
+  
+  /// Initialize with skin image binding (cape must use Binding)
   public init(
-    texturePath: String? = nil,
-    capeImage: NSImage,
+    skinImage: Binding<NSImage?>,
+    capeImage: Binding<NSImage?>? = nil,
     playerModel: PlayerModel = .steve,
     rotationDuration: TimeInterval = 15.0,
     backgroundColor: NSColor = .clear,
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
-    self._texturePath = State(initialValue: texturePath)
-    self._skinImage = State(initialValue: nil)
-    self._capeImage = State(initialValue: capeImage)
+    self._texturePath = State(initialValue: nil)
+    self._internalSkinImage = State(initialValue: nil)
+    self.externalSkinImageBinding = skinImage
+    self.externalTexturePathBinding = nil
+    self.capeImageBinding = capeImage
+    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
     self.playerModel = playerModel
     self.rotationDuration = rotationDuration
     self.backgroundColor = backgroundColor
@@ -96,11 +154,55 @@ public struct SkinRenderView: View {
   // MARK: - Body
 
   public var body: some View {
-    Group {
-      if let skinImage = skinImage {
+    // 如果使用外部绑定，检查并同步 tracker（使用 let _ = 触发副作用）
+    let currentCapeImage = currentCapeImage
+    let currentSkinImage = currentSkinImage
+    let currentTexturePath = currentTexturePath
+    
+    // 检查并同步外部绑定的变化
+    let _ = {
+      // 检查披风绑定
+      if let binding = capeImageBinding {
+        let bindingValue = binding.wrappedValue
+        if externalCapeImageTracker !== bindingValue {
+          DispatchQueue.main.async {
+            externalCapeImageTracker = bindingValue
+            renderKey = UUID()
+            print("[SkinRenderView] 检测到披风绑定变化，更新 tracker 和 renderKey")
+          }
+        }
+      }
+      
+      // 检查皮肤图像绑定
+      if let binding = externalSkinImageBinding {
+        let bindingValue = binding.wrappedValue
+        if internalSkinImage !== bindingValue {
+          DispatchQueue.main.async {
+            internalSkinImage = bindingValue
+            renderKey = UUID()
+            print("[SkinRenderView] 检测到皮肤图像绑定变化，更新 renderKey")
+          }
+        }
+      }
+      
+      // 检查皮肤路径绑定
+      if let binding = externalTexturePathBinding {
+        let bindingValue = binding.wrappedValue
+        if texturePath != bindingValue {
+          DispatchQueue.main.async {
+            texturePath = bindingValue
+            renderKey = UUID()
+            print("[SkinRenderView] 检测到皮肤路径绑定变化，更新 renderKey")
+          }
+        }
+      }
+    }()
+    
+    return Group {
+      if let skinImage = currentSkinImage {
         SceneKitCharacterViewRepresentable(
           skinImage: skinImage,
-          capeImage: capeImage,
+          capeImage: currentCapeImage,
           playerModel: playerModel,
           rotationDuration: rotationDuration,
           backgroundColor: backgroundColor,
@@ -108,8 +210,8 @@ public struct SkinRenderView: View {
         )
       } else {
         SceneKitCharacterViewRepresentable(
-          texturePath: texturePath,
-          capeImage: capeImage,
+          texturePath: currentTexturePath,
+          capeImage: currentCapeImage,
           playerModel: playerModel,
           rotationDuration: rotationDuration,
           backgroundColor: backgroundColor,
@@ -128,6 +230,34 @@ public struct SkinRenderView: View {
       isTargeted: nil
     ) { providers in
       handleDrop(providers: providers, target: .skin)
+    }
+    .onChange(of: externalCapeImageTracker) { oldValue, newValue in
+      // 披风绑定变化时（包括变为 nil）更新渲染键，触发重新渲染
+      print("[SkinRenderView] onChange detected - externalCapeImageTracker changed")
+      print("[SkinRenderView]   oldValue: \(oldValue != nil ? "有值" : "nil")")
+      print("[SkinRenderView]   newValue: \(newValue != nil ? "有值" : "nil")")
+      // 同步外部绑定的值到 tracker
+      if let binding = capeImageBinding {
+        externalCapeImageTracker = binding.wrappedValue
+      }
+      renderKey = UUID()
+      print("[SkinRenderView] 更新 renderKey in onChange: \(renderKey)")
+    }
+    .onChange(of: internalSkinImage) { oldValue, newValue in
+      // 内部皮肤图像变化时更新渲染键
+      print("[SkinRenderView] onChange detected - internalSkinImage changed")
+      renderKey = UUID()
+    }
+    .onChange(of: texturePath) { oldValue, newValue in
+      // 皮肤路径变化时更新渲染键
+      print("[SkinRenderView] onChange detected - texturePath changed")
+      renderKey = UUID()
+    }
+    .onAppear {
+      // 在视图出现时，如果使用外部绑定，同步 tracker
+      if let binding = capeImageBinding {
+        externalCapeImageTracker = binding.wrappedValue
+      }
     }
   }
 
@@ -166,8 +296,14 @@ public struct SkinRenderView: View {
     switch ImageDropHandler.validateSkin(image) {
     case .valid(let validImage):
       // 皮肤变化时更新状态，这会触发重新渲染
-      skinImage = validImage
-      texturePath = nil
+      if let binding = externalSkinImageBinding {
+        binding.wrappedValue = validImage
+        // 如果有路径绑定，清空它
+        externalTexturePathBinding?.wrappedValue = nil
+      } else {
+        internalSkinImage = validImage
+        texturePath = nil
+      }
       renderKey = UUID() // 更新渲染键以确保重新渲染
       onSkinDropped?(validImage)
     case .invalidDimensions(let width, let height, let expected):
@@ -180,10 +316,14 @@ public struct SkinRenderView: View {
   private func handleCapeDrop(_ image: NSImage) {
     switch ImageDropHandler.validateCape(image) {
     case .valid(let validImage):
-      // 披风变化时更新状态，这会触发重新渲染
-      capeImage = validImage
-      renderKey = UUID() // 更新渲染键以确保重新渲染
-      onCapeDropped?(validImage)
+      // 披风变化时更新绑定（披风只支持 Binding）
+      if let binding = capeImageBinding {
+        binding.wrappedValue = validImage
+        renderKey = UUID() // 更新渲染键以确保重新渲染
+        onCapeDropped?(validImage)
+      } else {
+        showDropError("Cape requires Binding. Please use capeImage: Binding<NSImage?> parameter.")
+      }
     case .invalidDimensions(let width, let height, let expected):
       showDropError("Cape size error: \(width)×\(height), need \(expected)")
     case .loadFailed(let message):

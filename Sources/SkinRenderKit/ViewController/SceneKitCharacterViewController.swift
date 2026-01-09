@@ -156,12 +156,20 @@ public class SceneKitCharacterViewController: NSViewController {
   // MARK: - Character Building
 
   func rebuildCharacter() {
+    print("[SceneKitCharacterViewController] rebuildCharacter() 被调用")
+    print("[SceneKitCharacterViewController]   当前 capeImage: \(capeImage != nil ? "有值" : "nil")")
+    print("[SceneKitCharacterViewController]   当前 capeTexturePath: \(capeTexturePath ?? "nil")")
+    
     // Remove existing character
     characterNodes?.root.removeFromParentNode()
 
-    guard let skinImage = skinImage else { return }
+    guard let skinImage = skinImage else {
+      print("[SceneKitCharacterViewController] rebuildCharacter() 跳过：没有皮肤图像")
+      return
+    }
 
     // Build new character
+    print("[SceneKitCharacterViewController] rebuildCharacter() 构建新角色，披风: \(capeImage != nil ? "有" : "无")")
     let nodes = nodeBuilder.build(
       skinImage: skinImage,
       capeImage: capeImage,
