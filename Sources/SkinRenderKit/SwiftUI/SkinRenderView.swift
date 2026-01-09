@@ -17,7 +17,6 @@ public struct SkinRenderView: View {
 
   @State private var texturePath: String?
   @State private var internalSkinImage: NSImage?
-  @State private var renderKey: UUID = UUID()
   
   // 皮肤的外部绑定（可选）
   private var externalSkinImageBinding: Binding<NSImage?>?
@@ -159,45 +158,6 @@ public struct SkinRenderView: View {
     let currentSkinImage = currentSkinImage
     let currentTexturePath = currentTexturePath
     
-    // 检查并同步外部绑定的变化
-    let _ = {
-      // 检查披风绑定
-      if let binding = capeImageBinding {
-        let bindingValue = binding.wrappedValue
-        if externalCapeImageTracker !== bindingValue {
-          DispatchQueue.main.async {
-            externalCapeImageTracker = bindingValue
-            renderKey = UUID()
-            print("[SkinRenderView] 检测到披风绑定变化，更新 tracker 和 renderKey")
-          }
-        }
-      }
-      
-      // 检查皮肤图像绑定
-      if let binding = externalSkinImageBinding {
-        let bindingValue = binding.wrappedValue
-        if internalSkinImage !== bindingValue {
-          DispatchQueue.main.async {
-            internalSkinImage = bindingValue
-            renderKey = UUID()
-            print("[SkinRenderView] 检测到皮肤图像绑定变化，更新 renderKey")
-          }
-        }
-      }
-      
-      // 检查皮肤路径绑定
-      if let binding = externalTexturePathBinding {
-        let bindingValue = binding.wrappedValue
-        if texturePath != bindingValue {
-          DispatchQueue.main.async {
-            texturePath = bindingValue
-            renderKey = UUID()
-            print("[SkinRenderView] 检测到皮肤路径绑定变化，更新 renderKey")
-          }
-        }
-      }
-    }()
-    
     return Group {
       if let skinImage = currentSkinImage {
         SceneKitCharacterViewRepresentable(
@@ -219,7 +179,6 @@ public struct SkinRenderView: View {
         )
       }
     }
-    .id(renderKey) // 使用渲染键确保图像变化时视图更新
     .frame(minWidth: 400, minHeight: 300)
     .contentShape(Rectangle())
     .onTapGesture {
@@ -231,34 +190,8 @@ public struct SkinRenderView: View {
     ) { providers in
       handleDrop(providers: providers, target: .skin)
     }
-    .onChange(of: externalCapeImageTracker) { oldValue, newValue in
-      // 披风绑定变化时（包括变为 nil）更新渲染键，触发重新渲染
-      print("[SkinRenderView] onChange detected - externalCapeImageTracker changed")
-      print("[SkinRenderView]   oldValue: \(oldValue != nil ? "有值" : "nil")")
-      print("[SkinRenderView]   newValue: \(newValue != nil ? "有值" : "nil")")
-      // 同步外部绑定的值到 tracker
-      if let binding = capeImageBinding {
-        externalCapeImageTracker = binding.wrappedValue
-      }
-      renderKey = UUID()
-      print("[SkinRenderView] 更新 renderKey in onChange: \(renderKey)")
-    }
-    .onChange(of: internalSkinImage) { oldValue, newValue in
-      // 内部皮肤图像变化时更新渲染键
-      print("[SkinRenderView] onChange detected - internalSkinImage changed")
-      renderKey = UUID()
-    }
-    .onChange(of: texturePath) { oldValue, newValue in
-      // 皮肤路径变化时更新渲染键
-      print("[SkinRenderView] onChange detected - texturePath changed")
-      renderKey = UUID()
-    }
-    .onAppear {
-      // 在视图出现时，如果使用外部绑定，同步 tracker
-      if let binding = capeImageBinding {
-        externalCapeImageTracker = binding.wrappedValue
-      }
-    }
+    // 不再依赖 renderKey / .id 强制重建 NSViewController，
+    // 让 SceneKitCharacterViewRepresentable 的 updateNSViewController 接管更新逻辑
   }
 
   // MARK: - Drop Handling
@@ -295,7 +228,7 @@ public struct SkinRenderView: View {
   private func handleSkinDrop(_ image: NSImage) {
     switch ImageDropHandler.validateSkin(image) {
     case .valid(let validImage):
-      // 皮肤变化时更新状态，这会触发重新渲染
+      // 皮肤变化时更新状态，交由 SceneKitCharacterViewRepresentable 驱动局部刷新
       if let binding = externalSkinImageBinding {
         binding.wrappedValue = validImage
         // 如果有路径绑定，清空它
@@ -304,7 +237,6 @@ public struct SkinRenderView: View {
         internalSkinImage = validImage
         texturePath = nil
       }
-      renderKey = UUID() // 更新渲染键以确保重新渲染
       onSkinDropped?(validImage)
     case .invalidDimensions(let width, let height, let expected):
       showDropError("Skin size error: \(width)×\(height), need \(expected)")
@@ -316,10 +248,9 @@ public struct SkinRenderView: View {
   private func handleCapeDrop(_ image: NSImage) {
     switch ImageDropHandler.validateCape(image) {
     case .valid(let validImage):
-      // 披风变化时更新绑定（披风只支持 Binding）
+      // 披风变化时更新绑定（披风只支持 Binding），交由 SceneKitCharacterViewRepresentable 驱动局部刷新
       if let binding = capeImageBinding {
         binding.wrappedValue = validImage
-        renderKey = UUID() // 更新渲染键以确保重新渲染
         onCapeDropped?(validImage)
       } else {
         showDropError("Cape requires Binding. Please use capeImage: Binding<NSImage?> parameter.")

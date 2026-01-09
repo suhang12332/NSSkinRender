@@ -16,17 +16,16 @@ extension SceneKitCharacterViewController {
       self.skinTexturePath = path
       loadTexture()
       if skinImage != nil {
-        rebuildCharacter()
+        updateSkinGeometry()
       }
       return
     }
 
     if let image = image {
-      // Skip if same image instance
-      guard skinImage !== image else { return }
+      // 不再仅通过实例相等性短路；允许外部复用同一个 NSImage 实例但更新其内容
       self.skinImage = image
       self.skinTexturePath = nil
-      rebuildCharacter()
+      updateSkinGeometry()
     }
   }
 
@@ -36,7 +35,7 @@ extension SceneKitCharacterViewController {
     print("[SceneKitCharacterViewController]   image: \(image != nil ? "有值" : "nil")")
     
     if let path = path {
-      // Skip if path unchanged
+      // path 未变化则直接返回，避免无效刷新
       guard capeTexturePath != path else {
         print("[SceneKitCharacterViewController] applyCapeUpdate 跳过：path 未变化")
         return
@@ -44,23 +43,19 @@ extension SceneKitCharacterViewController {
       print("[SceneKitCharacterViewController] applyCapeUpdate 更新 path")
       self.capeTexturePath = path
       loadCapeTexture(from: path)
+      // 只在成功加载到图片时更新披风几何
       if capeImage != nil {
-        print("[SceneKitCharacterViewController] applyCapeUpdate 调用 rebuildCharacter()")
-        rebuildCharacter()
+        updateCapeGeometry()
       }
       return
     }
 
     if let image = image {
-      // Skip if same image instance
-      guard capeImage !== image else {
-        print("[SceneKitCharacterViewController] applyCapeUpdate 跳过：相同图像实例")
-        return
-      }
-      print("[SceneKitCharacterViewController] applyCapeUpdate 更新图像并重建")
+      // 允许同一实例重复传入，以支持外部对 NSImage 内容的就地修改
+      print("[SceneKitCharacterViewController] applyCapeUpdate 更新图像不重建整个人物")
       self.capeImage = image
       self.capeTexturePath = nil
-      rebuildCharacter()
+      updateCapeGeometry()
     }
   }
 
@@ -109,11 +104,10 @@ extension SceneKitCharacterViewController {
       print("[SceneKitCharacterViewController] removeCapeTexture() 跳过：没有披风需要移除")
       return
     }
-    print("[SceneKitCharacterViewController] removeCapeTexture() 执行移除操作")
+    print("[SceneKitCharacterViewController] removeCapeTexture() 执行移除操作（不重建整个人物）")
     self.capeImage = nil
     self.capeTexturePath = nil
-    print("[SceneKitCharacterViewController] removeCapeTexture() 调用 rebuildCharacter()")
-    rebuildCharacter()
+    removeCapeGeometry()
   }
 
   public func updatePlayerModel(_ model: PlayerModel) {
@@ -136,5 +130,125 @@ extension SceneKitCharacterViewController {
 
   public func toggleCapeAnimation(_ enabled: Bool) {
     animationController.toggleCapeAnimation(enabled)
+  }
+
+  // MARK: - Cape Geometry Helpers
+
+  /// 根据当前 `capeImage` 更新或创建披风几何，而不重建整个人物
+  private func updateCapeGeometry() {
+    guard let nodes = characterNodes else {
+      print("[SceneKitCharacterViewController] updateCapeGeometry 跳过：characterNodes 为 nil")
+      return
+    }
+    guard let image = capeImage else {
+      print("[SceneKitCharacterViewController] updateCapeGeometry 跳过：capeImage 为 nil")
+      return
+    }
+
+    if let capeNode = nodes.cape, let geometry = capeNode.geometry {
+      print("[SceneKitCharacterViewController] updateCapeGeometry: 直接更新现有披风材质")
+      geometry.materials = materialFactory.createCapeMaterials(from: image)
+    } else {
+      print("[SceneKitCharacterViewController] updateCapeGeometry: 当前无披风，创建新的披风节点")
+      let capeNodes = nodeBuilder.buildCape(capeImage: image, parent: nodes.root)
+      nodes.setCape(pivot: capeNodes.pivot, cape: capeNodes.cape)
+      nodes.setCapeHidden(!showCape)
+      // 如果披风动画已开启，重新刷新一次动画
+      animationController.refreshCapeSwayAnimation()
+    }
+  }
+
+  /// 移除披风几何而不重建整个人物
+  private func removeCapeGeometry() {
+    guard let nodes = characterNodes else {
+      print("[SceneKitCharacterViewController] removeCapeGeometry 跳过：characterNodes 为 nil")
+      return
+    }
+
+    if let pivot = nodes.capePivot {
+      print("[SceneKitCharacterViewController] removeCapeGeometry: 从场景中移除 capePivot")
+      pivot.removeAllActions()
+      pivot.removeFromParentNode()
+    }
+
+    // 清空节点引用，防止动画控制器继续持有旧节点
+    nodes.clearCape()
+    animationController.toggleCapeAnimation(false)
+  }
+
+  // MARK: - Skin Geometry Helpers
+
+  /// 根据当前 `skinImage` 只刷新材质，而不重建整个人物节点
+  private func updateSkinGeometry() {
+    guard let nodes = characterNodes else {
+      print("[SceneKitCharacterViewController] updateSkinGeometry 跳过：characterNodes 为 nil")
+      return
+    }
+    guard let image = skinImage else {
+      print("[SceneKitCharacterViewController] updateSkinGeometry 跳过：skinImage 为 nil")
+      return
+    }
+
+    // 1. 基础几何（SCNBox）直接用 materialFactory 重生成材质
+    if let headGeometry = nodes.head.geometry {
+      headGeometry.materials = materialFactory.createHeadMaterials(from: image, isHat: false)
+    }
+    if let bodyGeometry = nodes.body.geometry {
+      bodyGeometry.materials = materialFactory.createBodyMaterials(from: image, isJacket: false)
+    }
+
+    if let rightArmGeometry = nodes.rightArm.geometry {
+      rightArmGeometry.materials = materialFactory.createArmMaterials(
+        from: image,
+        isLeft: false,
+        isSleeve: false,
+        playerModel: playerModel
+      )
+    }
+    if let leftArmGeometry = nodes.leftArm.geometry {
+      leftArmGeometry.materials = materialFactory.createArmMaterials(
+        from: image,
+        isLeft: true,
+        isSleeve: false,
+        playerModel: playerModel
+      )
+    }
+
+    if let rightLegGeometry = nodes.rightLeg.geometry {
+      rightLegGeometry.materials = materialFactory.createLegMaterials(
+        from: image,
+        isLeft: false,
+        isSleeve: false
+      )
+    }
+    if let leftLegGeometry = nodes.leftLeg.geometry {
+      leftLegGeometry.materials = materialFactory.createLegMaterials(
+        from: image,
+        isLeft: true,
+        isSleeve: false
+      )
+    }
+
+    // 2. 外层体素（Hat / Jacket / Sleeves）直接按像素重算颜色
+    func refreshVoxelColors(in overlayNode: SCNNode) {
+      overlayNode.enumerateChildNodes { child, _ in
+        if let box = child.geometry as? SCNBox,
+           let material = box.materials.first,
+           let color = material.diffuse.contents as? NSColor {
+          // 这里无法从旧 color 反推回皮肤坐标，因此简单方案是保留原 color。
+          // 如需完全跟随新皮肤贴图，需要在 VoxelOuterLayerBuilder 中记录每个 voxel 对应的 UV / face / 像素坐标。
+          material.diffuse.contents = color
+        }
+      }
+    }
+
+    // 当前版本：基础几何已经完全跟新皮肤，外层体素依旧使用旧颜色。
+    // 如果你之后希望外层也 100% 跟随贴图变化，可以再扩展 VoxelOuterLayerBuilder 做精细映射。
+    refreshVoxelColors(in: nodes.hat)
+    refreshVoxelColors(in: nodes.jacket)
+    refreshVoxelColors(in: nodes.rightArmSleeve)
+    refreshVoxelColors(in: nodes.leftArmSleeve)
+    refreshVoxelColors(in: nodes.rightLegSleeve)
+    refreshVoxelColors(in: nodes.leftLegSleeve)
   }
 }

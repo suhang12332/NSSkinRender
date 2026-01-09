@@ -89,6 +89,12 @@ public final class CharacterNodeBuilder {
       self.cape = cape
     }
 
+    /// Clear cape references (used when removing cape without rebuilding the whole character)
+    public func clearCape() {
+      self.capePivot = nil
+      self.cape = nil
+    }
+
     func setElytra(pivot: SCNNode, leftWing: SCNNode, rightWing: SCNNode) {
       self.elytraPivot = pivot
       self.elytraLeftWing = leftWing
