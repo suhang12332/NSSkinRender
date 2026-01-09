@@ -37,17 +37,17 @@ extension SceneKitCharacterViewController {
   }
 
   func setupLighting() {
-    // Ambient light
+    // Ambient light - 增加环境光强度，让整体更亮
     scene.rootNode.addChildNode(createLightNode(
       type: .ambient,
       intensity: 400,
-      color: NSColor(white: 0.9, alpha: 1.0)
+      color: NSColor(white: 0.85, alpha: 1.0)
     ))
 
-    // Main directional light with shadows
+    // Main directional light with shadows - 增强主光源强度
     let directionalLight = createLightNode(
       type: .directional,
-      intensity: 1000,
+      intensity: 1600,
       color: NSColor(white: 1.0, alpha: 1.0),
       castsShadow: true,
       eulerAngles: SCNVector3(-Float.pi / 3, Float.pi / 4, 0)
@@ -57,26 +57,26 @@ extension SceneKitCharacterViewController {
     }
     scene.rootNode.addChildNode(directionalLight)
 
-    // Fill light (auxiliary directional light)
+    // Fill light (auxiliary directional light) - 增加补光强度
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
-      intensity: 300,
+      intensity: 350,
       color: NSColor(white: 0.95, alpha: 1.0),
       eulerAngles: SCNVector3(-Float.pi / 4, -Float.pi / 3, 0)
     ))
 
-    // Rim/back light (outline light)
+    // Rim/back light (outline light) - 增强轮廓光
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
-      intensity: 250,
-      color: NSColor(white: 0.9, alpha: 1.0),
+      intensity: 400,
+      color: NSColor(white: 1.0, alpha: 1.0),
       eulerAngles: SCNVector3(-Float.pi / 3.5, Float.pi * 0.75, 0)
     ))
 
-    // Top omni light
+    // Top omni light - 增加顶部点光源强度
     scene.rootNode.addChildNode(createLightNode(
       type: .omni,
-      intensity: 400,
+      intensity: 450,
       color: NSColor(white: 1.0, alpha: 1.0),
       position: SCNVector3(0, 25, 0)
     ))
@@ -125,10 +125,11 @@ extension SceneKitCharacterViewController {
   }
 
   // Configure shadow settings for main directional light
+  // 增强阴影对比度，让光影效果更明显
   private func configureShadowLight(_ light: SCNLight) {
     light.shadowMode = .deferred
-    light.shadowRadius = 4.0
-    light.shadowColor = NSColor.black.withAlphaComponent(0.3)
+    light.shadowRadius = 5.0
+    light.shadowColor = NSColor.black.withAlphaComponent(0.55)  // 增强阴影深度
     light.shadowMapSize = CGSize(width: 2048, height: 2048)
     light.shadowBias = 2.0
     light.shadowSampleCount = 32

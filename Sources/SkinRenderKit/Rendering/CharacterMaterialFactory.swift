@@ -242,8 +242,14 @@ public final class CharacterMaterialFactory {
           )
         }
 
-        // Use lambert lighting model for proper shading response to scene lights
-        configureLambertLighting(material)
+        // Use Phong lighting model for enhanced depth and material quality
+        // 使用 Phong 光照模型增强质感和光影效果
+        configurePhongLighting(
+          material,
+          shininess: 0.15,
+          ambient: NSColor.white.withAlphaComponent(0.15),  // 增加 ambient 让材质更亮
+          specular: NSColor.white.withAlphaComponent(0.2)
+        )
 
       case .failure:
         // Fallback material for failed crops

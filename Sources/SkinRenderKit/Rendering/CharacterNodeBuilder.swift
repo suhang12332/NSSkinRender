@@ -151,6 +151,11 @@ public final class CharacterNodeBuilder {
   ) -> CharacterNodes {
     let root = SCNNode()
     root.name = "CharacterGroup"
+    // 全局缩放，让模型整体小一点
+    let s = CharacterDimensions.globalScale
+    root.scale = SCNVector3(s, s, s)
+    // 上移模型位置
+    root.position.y = CharacterDimensions.globalYOffset
 
     // Build all body parts
     let headNodes = buildHead(skinImage: skinImage, parent: root)

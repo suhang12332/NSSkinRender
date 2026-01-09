@@ -45,6 +45,7 @@ public struct SkinRenderView: View {
     capeImageBinding?.wrappedValue
   }
 
+
   // MARK: - Configuration
 
   let playerModel: PlayerModel

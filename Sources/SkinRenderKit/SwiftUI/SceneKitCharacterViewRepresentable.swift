@@ -99,7 +99,6 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
         backgroundColor: backgroundColor,
         debugMode: debugMode
       )
-      print("[SceneKitCharacterViewRepresentable] 控制器创建后 capeImage: \(controller.capeImage != nil ? "有值" : "nil")")
     } else if let texturePath = texturePath {
       controller = SceneKitCharacterViewController(
         texturePath: texturePath,

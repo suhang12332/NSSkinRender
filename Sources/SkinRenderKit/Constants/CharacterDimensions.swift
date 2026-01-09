@@ -22,6 +22,16 @@ public enum CharacterDimensions {
   /// Head center Y position
   public static let headY: CGFloat = 16
 
+  // MARK: - Global Scale
+
+  /// Global character scale factor (1.0 = original size)
+  /// 调小一点让模型在画面中显得更小
+  public static let globalScale: CGFloat = 0.8
+
+  /// Global Y position offset for the character root node
+  /// 上移模型位置
+  public static let globalYOffset: CGFloat = 3.0
+
   // MARK: - Body
 
   /// Body width (8 pixels)
