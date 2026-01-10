@@ -34,11 +34,25 @@ public final class CharacterMaterialFactory {
 
   /// Configuration for bottom face transforms
   public var bottomFaceConfig: BottomFaceConfig
+  
+  /// 纹理缓存：用于缓存裁剪结果和透明度检测
+  /// 内部访问，允许CharacterNodeBuilder共享同一个缓存实例
+  internal let textureCache: TextureCache
+  
+  /// 预创建的Phong光照配置（避免重复创建NSColor对象）
+  private let basePhongAmbient = NSColor.white.withAlphaComponent(0.15)
+  private let basePhongSpecular = NSColor.white.withAlphaComponent(0.2)
+  private let outerPhongAmbient = NSColor.black.withAlphaComponent(0.2)
+  private let outerPhongSpecular = NSColor.white.withAlphaComponent(0.1)
 
   // MARK: - Initialization
 
-  public init(bottomFaceConfig: BottomFaceConfig = BottomFaceConfig()) {
+  public init(
+    bottomFaceConfig: BottomFaceConfig = BottomFaceConfig(),
+    textureCache: TextureCache? = nil
+  ) {
     self.bottomFaceConfig = bottomFaceConfig
+    self.textureCache = textureCache ?? TextureCache()
   }
 
   // MARK: - Head Materials
@@ -153,12 +167,21 @@ public final class CharacterMaterialFactory {
   /// - Returns: Array of 6 materials for each cube face
   public func createCapeMaterials(from capeImage: NSImage) -> [SCNMaterial] {
     var materials: [SCNMaterial] = []
+    materials.reserveCapacity(6)  // 预分配容量
 
     for spec in CubeFace.cape {
       let material = SCNMaterial()
 
-      switch TextureProcessor.crop(capeImage, rect: spec.rect) {
-      case .success(let croppedImage):
+      // 优化：使用纹理缓存获取裁剪结果和透明度信息
+      let cropResult = textureCache.getOrCrop(
+        image: capeImage,
+        rect: spec.rect
+      ) { image, rect in
+        TextureProcessor.crop(image, rect: rect)
+      }
+
+      switch cropResult {
+      case .success(let (croppedImage, _)):
         let finalImage: NSImage
         if spec.rotate180 {
           finalImage = (try? TextureProcessor.rotate(croppedImage, degrees: 180).get()) ?? croppedImage
@@ -168,7 +191,13 @@ public final class CharacterMaterialFactory {
 
         configureBaseMaterialProperties(material, image: finalImage)
         configureTransparency(material, transparency: 1.0, isDoubleSided: true)
-        configurePhongLighting(material, shininess: 0.1)
+        // 优化：使用预创建的NSColor对象
+        configurePhongLighting(
+          material,
+          shininess: 0.1,
+          ambient: outerPhongAmbient,
+          specular: outerPhongSpecular
+        )
 
       case .failure:
         // Fallback material
@@ -200,63 +229,95 @@ public final class CharacterMaterialFactory {
     isOuter: Bool,
     isLimb: Bool
   ) -> [SCNMaterial] {
+    // 预分配容量，避免数组重新分配
     var materials: [SCNMaterial] = []
+    materials.reserveCapacity(6)
 
     for (index, spec) in specs.enumerated() {
       let material = SCNMaterial()
 
-      switch TextureProcessor.crop(skinImage, rect: spec.rect) {
-      case .success(let croppedImage):
-        let finalImage: NSImage
-
-        // Apply bottom face transforms
-        if index == 5 {  // bottom face
-          let transformResult: Result<NSImage, TextureProcessor.Error>
-          if isLimb {
-            transformResult = TextureProcessor.applyBottomFaceTransform(
-              croppedImage,
-              flipMode: bottomFaceConfig.limbFlipMode,
-              rotate180: bottomFaceConfig.limbRotate180
-            )
-          } else {
-            transformResult = TextureProcessor.applyBottomFaceTransform(
-              croppedImage,
-              flipMode: bottomFaceConfig.headBodyFlipMode,
-              rotate180: bottomFaceConfig.headBodyRotate180
-            )
-          }
-          finalImage = (try? transformResult.get()) ?? croppedImage
-        } else {
-          finalImage = croppedImage
+      // 优化：使用纹理缓存获取裁剪结果和透明度信息
+      // 注意：bottom face需要变换，变换后的图像不会被缓存（或需要特殊处理）
+      let needsTransform = index == 5  // bottom face
+      
+      let finalImage: NSImage
+      let hasTransparency: Bool
+      
+      if needsTransform {
+        // bottom face需要变换，先获取裁剪结果
+        let cropResult = textureCache.getOrCrop(
+          image: skinImage,
+          rect: spec.rect
+        ) { image, rect in
+          TextureProcessor.crop(image, rect: rect)
         }
-
-        configureBaseMaterialProperties(material, image: finalImage)
-
-        // Set transparency for outer layers
-        if isOuter {
-          let hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
-          configureTransparency(
-            material,
-            transparency: hasTransparency ? 1.0 : 0.9,
-            isDoubleSided: hasTransparency
+        
+        guard case .success(let (croppedImage, _)) = cropResult else {
+          material.diffuse.contents = isOuter
+            ? NSColor.blue.withAlphaComponent(0.5)
+            : NSColor.red
+          materials.append(material)
+          continue
+        }
+        
+        // 应用变换（变换后的图像不使用缓存）
+        let transformResult: Result<NSImage, TextureProcessor.Error>
+        if isLimb {
+          transformResult = TextureProcessor.applyBottomFaceTransform(
+            croppedImage,
+            flipMode: bottomFaceConfig.limbFlipMode,
+            rotate180: bottomFaceConfig.limbRotate180
+          )
+        } else {
+          transformResult = TextureProcessor.applyBottomFaceTransform(
+            croppedImage,
+            flipMode: bottomFaceConfig.headBodyFlipMode,
+            rotate180: bottomFaceConfig.headBodyRotate180
           )
         }
-
-        // Use Phong lighting model for enhanced depth and material quality
-        // 使用 Phong 光照模型增强质感和光影效果
-        configurePhongLighting(
-          material,
-          shininess: 0.15,
-          ambient: NSColor.white.withAlphaComponent(0.15),  // 增加 ambient 让材质更亮
-          specular: NSColor.white.withAlphaComponent(0.2)
-        )
-
-      case .failure:
-        // Fallback material for failed crops
-        material.diffuse.contents = isOuter
-          ? NSColor.blue.withAlphaComponent(0.5)
-          : NSColor.red
+        finalImage = (try? transformResult.get()) ?? croppedImage
+        // 变换后需要重新检测透明度
+        hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
+      } else {
+        // 其他面直接使用缓存的结果（包括透明度信息）
+        let cropResult = textureCache.getOrCrop(
+          image: skinImage,
+          rect: spec.rect
+        ) { image, rect in
+          TextureProcessor.crop(image, rect: rect)
+        }
+        
+        guard case .success(let (cropped, transparency)) = cropResult else {
+          material.diffuse.contents = isOuter
+            ? NSColor.blue.withAlphaComponent(0.5)
+            : NSColor.red
+          materials.append(material)
+          continue
+        }
+        
+        finalImage = cropped
+        hasTransparency = transparency
       }
+
+      configureBaseMaterialProperties(material, image: finalImage)
+
+      // Set transparency for outer layers
+      if isOuter {
+        configureTransparency(
+          material,
+          transparency: hasTransparency ? 1.0 : 0.9,
+          isDoubleSided: hasTransparency
+        )
+      }
+
+      // Use Phong lighting model for enhanced depth and material quality
+      // 优化：使用预创建的NSColor对象，避免重复创建
+      configurePhongLighting(
+        material,
+        shininess: 0.15,
+        ambient: basePhongAmbient,
+        specular: basePhongSpecular
+      )
 
       materials.append(material)
     }
@@ -280,9 +341,11 @@ public final class CharacterMaterialFactory {
     case .success(let croppedImage):
       configureBaseMaterialProperties(material, image: croppedImage)
       configureTransparency(material, transparency: 1.0, isDoubleSided: true)
+      // 优化：使用预创建的NSColor对象
       configurePhongLighting(
         material,
         shininess: 0.2,
+        ambient: outerPhongAmbient,
         specular: NSColor.white.withAlphaComponent(0.15)
       )
 

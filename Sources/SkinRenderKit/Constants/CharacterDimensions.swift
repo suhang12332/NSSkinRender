@@ -16,8 +16,8 @@ public enum CharacterDimensions {
   /// Base head size (8x8x8 pixels)
   public static let headSize: CGFloat = 8
 
-  /// Hat overlay size (9x9x9 pixels)
-  public static let hatSize: CGFloat = 9
+  /// Hat overlay size (8.25x8.25x8.25 pixels, thickness 0.25)
+  public static let hatSize: CGFloat = 8.25
 
   /// Head center Y position
   public static let headY: CGFloat = 16
@@ -46,14 +46,14 @@ public enum CharacterDimensions {
   /// Body center Y position
   public static let bodyY: CGFloat = 6
 
-  /// Jacket overlay width
-  public static let jacketWidth: CGFloat = 8.5
+  /// Jacket overlay width (thickness 0.125)
+  public static let jacketWidth: CGFloat = 8.125
 
-  /// Jacket overlay height
-  public static let jacketHeight: CGFloat = 12.5
+  /// Jacket overlay height (thickness 0.125)
+  public static let jacketHeight: CGFloat = 12.125
 
-  /// Jacket overlay depth
-  public static let jacketDepth: CGFloat = 4.5
+  /// Jacket overlay depth (thickness 0.125)
+  public static let jacketDepth: CGFloat = 4.125
 
   // MARK: - Legs
 
@@ -95,8 +95,8 @@ public enum CharacterDimensions {
   /// Cape height (16 pixels)
   public static let capeHeight: CGFloat = 16
 
-  /// Cape depth/thickness (1 pixel)
-  public static let capeDepth: CGFloat = 1.0
+  /// Cape depth/thickness (0.5 pixel)
+  public static let capeDepth: CGFloat = 0.5
 
   /// Cape pivot Y position (shoulder line)
   public static let capePivotY: CGFloat = 11

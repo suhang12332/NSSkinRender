@@ -214,6 +214,54 @@ public enum TextureProcessor {
       && alphaInfo != .noneSkipFirst
       && alphaInfo != .noneSkipLast
   }
+  
+  /// Check if an image contains transparent pixels (with pixel-level check)
+  /// This is more accurate but slower than hasTransparentPixels
+  /// - Parameter image: Image to check
+  /// - Returns: True if any pixel has alpha < 255
+  public static func hasTransparentPixelsDetailed(_ image: NSImage) -> Bool {
+    guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+      return false
+    }
+    
+    // 快速检查：如果alphaInfo表明没有alpha通道，直接返回false
+    let alphaInfo = cgImage.alphaInfo
+    if alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast {
+      return false
+    }
+    
+    // 像素级检查：读取像素数据检查是否有透明像素
+    let width = cgImage.width
+    let height = cgImage.height
+    
+    guard let dataProvider = cgImage.dataProvider,
+          let pixelData = dataProvider.data else {
+      return false
+    }
+    
+    let data = CFDataGetBytePtr(pixelData)
+    guard let data = data else { return false }
+    
+    let bytesPerPixel = cgImage.bitsPerPixel / 8
+    let bytesPerRow = cgImage.bytesPerRow
+    
+    // 检查每个像素的alpha值
+    for y in 0..<height {
+      for x in 0..<width {
+        let pixelIndex = y * bytesPerRow + x * bytesPerPixel
+        let alphaIndex = pixelIndex + (bytesPerPixel - 1) // alpha通常在最后一个字节
+        
+        if alphaIndex < CFDataGetLength(pixelData) {
+          let alpha = data[alphaIndex]
+          if alpha < 255 {
+            return true
+          }
+        }
+      }
+    }
+    
+    return false
+  }
 
   // MARK: - Combined Transforms
 

@@ -93,11 +93,21 @@ extension CharacterNodeBuilder {
     // Head hat
     let hatSize = CharacterDimensions.hatSize
     let hatBoxSize = SCNVector3(hatSize, hatSize, hatSize)
+    let headBaseSize = SCNVector3(
+      CharacterDimensions.headSize,
+      CharacterDimensions.headSize,
+      CharacterDimensions.headSize
+    )
+    let hatConfig = VoxelOverlayConfig(
+      boxSize: hatBoxSize,
+      baseSize: headBaseSize,
+      voxelThickness: 0.5
+    )
     voxelBuilder.rebuildVoxelOverlay(
       in: nodes.hat,
       from: skinImage,
       specs: CubeFace.headHat,
-      boxSize: hatBoxSize
+      config: hatConfig
     )
 
     // Body jacket
@@ -106,11 +116,21 @@ extension CharacterNodeBuilder {
       CharacterDimensions.jacketHeight,
       CharacterDimensions.jacketDepth
     )
+    let bodyBaseSize = SCNVector3(
+      CharacterDimensions.bodyWidth,
+      CharacterDimensions.bodyHeight,
+      CharacterDimensions.bodyDepth
+    )
+    let jacketConfig = VoxelOverlayConfig(
+      boxSize: jacketBoxSize,
+      baseSize: bodyBaseSize,
+      voxelThickness: 0.25
+    )
     voxelBuilder.rebuildVoxelOverlay(
       in: nodes.jacket,
       from: skinImage,
       specs: CubeFace.bodyJacket,
-      boxSize: jacketBoxSize
+      config: jacketConfig
     )
 
     // Arms sleeves
@@ -121,6 +141,16 @@ extension CharacterNodeBuilder {
       armSleeveDimensions.height,
       armSleeveDimensions.length
     )
+    let armBaseSize = SCNVector3(
+      armDimensions.width,
+      armDimensions.height,
+      armDimensions.length
+    )
+    let armSleeveConfig = VoxelOverlayConfig(
+      boxSize: armSleeveBoxSize,
+      baseSize: armBaseSize,
+      voxelThickness: 0.25
+    )
 
     let rightArmSleeveSpecs = CubeFace.armSleeve(
       isLeft: false,
@@ -130,7 +160,7 @@ extension CharacterNodeBuilder {
       in: nodes.rightArmSleeve,
       from: skinImage,
       specs: rightArmSleeveSpecs,
-      boxSize: armSleeveBoxSize
+      config: armSleeveConfig
     )
 
     let leftArmSleeveSpecs = CubeFace.armSleeve(
@@ -141,15 +171,26 @@ extension CharacterNodeBuilder {
       in: nodes.leftArmSleeve,
       from: skinImage,
       specs: leftArmSleeveSpecs,
-      boxSize: armSleeveBoxSize
+      config: armSleeveConfig
     )
 
     // Legs sleeves
+    let legDimensions = playerModel.legDimensions
     let legSleeveDimensions = playerModel.legSleeveDimensions
     let legSleeveBoxSize = SCNVector3(
       legSleeveDimensions.width,
       legSleeveDimensions.height,
       legSleeveDimensions.length
+    )
+    let legBaseSize = SCNVector3(
+      legDimensions.width,
+      legDimensions.height,
+      legDimensions.length
+    )
+    let legSleeveConfig = VoxelOverlayConfig(
+      boxSize: legSleeveBoxSize,
+      baseSize: legBaseSize,
+      voxelThickness: 0.25
     )
 
     let rightLegSleeveSpecs = CubeFace.legSleeve(isLeft: false)
@@ -157,7 +198,7 @@ extension CharacterNodeBuilder {
       in: nodes.rightLegSleeve,
       from: skinImage,
       specs: rightLegSleeveSpecs,
-      boxSize: legSleeveBoxSize
+      config: legSleeveConfig
     )
 
     let leftLegSleeveSpecs = CubeFace.legSleeve(isLeft: true)
@@ -165,7 +206,7 @@ extension CharacterNodeBuilder {
       in: nodes.leftLegSleeve,
       from: skinImage,
       specs: leftLegSleeveSpecs,
-      boxSize: legSleeveBoxSize
+      config: legSleeveConfig
     )
   }
 }
