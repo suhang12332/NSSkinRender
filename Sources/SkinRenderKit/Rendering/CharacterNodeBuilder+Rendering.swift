@@ -93,11 +93,18 @@ extension CharacterNodeBuilder {
     // Head hat
     let hatSize = CharacterDimensions.hatSize
     let hatBoxSize = SCNVector3(hatSize, hatSize, hatSize)
+    let headBaseSize = SCNVector3(
+      CharacterDimensions.headSize,
+      CharacterDimensions.headSize,
+      CharacterDimensions.headSize
+    )
     voxelBuilder.rebuildVoxelOverlay(
       in: nodes.hat,
       from: skinImage,
       specs: CubeFace.headHat,
-      boxSize: hatBoxSize
+      boxSize: hatBoxSize,
+      voxelThickness: 0.5,
+      baseSize: headBaseSize
     )
 
     // Body jacket
@@ -106,11 +113,18 @@ extension CharacterNodeBuilder {
       CharacterDimensions.jacketHeight,
       CharacterDimensions.jacketDepth
     )
+    let bodyBaseSize = SCNVector3(
+      CharacterDimensions.bodyWidth,
+      CharacterDimensions.bodyHeight,
+      CharacterDimensions.bodyDepth
+    )
     voxelBuilder.rebuildVoxelOverlay(
       in: nodes.jacket,
       from: skinImage,
       specs: CubeFace.bodyJacket,
-      boxSize: jacketBoxSize
+      boxSize: jacketBoxSize,
+      voxelThickness: 0.25,
+      baseSize: bodyBaseSize
     )
 
     // Arms sleeves
@@ -130,7 +144,8 @@ extension CharacterNodeBuilder {
       in: nodes.rightArmSleeve,
       from: skinImage,
       specs: rightArmSleeveSpecs,
-      boxSize: armSleeveBoxSize
+      boxSize: armSleeveBoxSize,
+      voxelThickness: 0.25
     )
 
     let leftArmSleeveSpecs = CubeFace.armSleeve(
@@ -141,7 +156,8 @@ extension CharacterNodeBuilder {
       in: nodes.leftArmSleeve,
       from: skinImage,
       specs: leftArmSleeveSpecs,
-      boxSize: armSleeveBoxSize
+      boxSize: armSleeveBoxSize,
+      voxelThickness: 0.25
     )
 
     // Legs sleeves
@@ -157,7 +173,8 @@ extension CharacterNodeBuilder {
       in: nodes.rightLegSleeve,
       from: skinImage,
       specs: rightLegSleeveSpecs,
-      boxSize: legSleeveBoxSize
+      boxSize: legSleeveBoxSize,
+      voxelThickness: 0.25
     )
 
     let leftLegSleeveSpecs = CubeFace.legSleeve(isLeft: true)
@@ -165,7 +182,8 @@ extension CharacterNodeBuilder {
       in: nodes.leftLegSleeve,
       from: skinImage,
       specs: leftLegSleeveSpecs,
-      boxSize: legSleeveBoxSize
+      boxSize: legSleeveBoxSize,
+      voxelThickness: 0.25
     )
   }
 }

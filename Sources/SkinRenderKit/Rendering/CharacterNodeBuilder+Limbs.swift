@@ -120,7 +120,8 @@ extension CharacterNodeBuilder {
       specs: sleeveSpecs,
       boxSize: sleeveBoxSize,
       position: sleevePosition,
-      name: "\(side)ArmSleeve"
+      name: "\(side)ArmSleeve",
+      voxelThickness: 0.25
     )
     armGroup.addChildNode(sleeveNode)
 
@@ -223,7 +224,8 @@ extension CharacterNodeBuilder {
       specs: sleeveSpecs,
       boxSize: sleeveBoxSize,
       position: sleevePosition,
-      name: "\(side)LegSleeve"
+      name: "\(side)LegSleeve",
+      voxelThickness: 0.25
     )
     legGroup.addChildNode(sleeveNode)
 

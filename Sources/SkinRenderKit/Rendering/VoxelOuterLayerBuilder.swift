@@ -27,6 +27,10 @@ final class VoxelOuterLayerBuilder {
   ///   - name: Name to assign to the overlay node (for debugging).
   ///   - voxelSize: Logical size of each voxel. Defaults to 1.0 which matches the
   ///                pixel-to-world mapping used by CharacterDimensions.
+  ///   - voxelThickness: Thickness of voxels in the direction perpendicular to the face.
+  ///                    Defaults to 0.5 for head, 0.25 for body.
+  ///   - baseSize: The base layer size. If provided, the size difference will be calculated
+  ///               automatically. If nil, defaults to 0.5 difference (for backward compatibility).
   ///
   /// - Returns: An SCNNode containing all voxel children.
   func buildVoxelOverlay(
@@ -35,7 +39,9 @@ final class VoxelOuterLayerBuilder {
     boxSize: SCNVector3,
     position: SCNVector3,
     name: String,
-    voxelSize: CGFloat = 1.0
+    voxelSize: CGFloat = 1.0,
+    voxelThickness: CGFloat? = nil,
+    baseSize: SCNVector3? = nil
   ) -> SCNNode {
     let containerNode = SCNNode()
     containerNode.name = name
@@ -49,7 +55,9 @@ final class VoxelOuterLayerBuilder {
       from: skinImage,
       specs: specs,
       boxSize: boxSize,
-      voxelSize: voxelSize
+      voxelSize: voxelSize,
+      voxelThickness: voxelThickness,
+      baseSize: baseSize
     )
 
     return containerNode
@@ -63,12 +71,17 @@ final class VoxelOuterLayerBuilder {
   ///   - specs: Face specifications defining crop rectangles (same semantics as buildVoxelOverlay).
   ///   - boxSize: The approximate outer box size that the voxels should occupy.
   ///   - voxelSize: Logical size of each voxel.
+  ///   - voxelThickness: Thickness of voxels in the direction perpendicular to the face.
+  ///   - baseSize: The base layer size. If provided, the size difference will be calculated
+  ///               automatically. If nil, defaults to 0.5 difference (for backward compatibility).
   func rebuildVoxelOverlay(
     in containerNode: SCNNode,
     from skinImage: NSImage,
     specs: [CubeFace.Spec],
     boxSize: SCNVector3,
-    voxelSize: CGFloat = 1.0
+    voxelSize: CGFloat = 1.0,
+    voxelThickness: CGFloat? = nil,
+    baseSize: SCNVector3? = nil
   ) {
     // Clear existing voxels and clean up resources
     for child in containerNode.childNodes {
@@ -88,7 +101,9 @@ final class VoxelOuterLayerBuilder {
       from: skinImage,
       specs: specs,
       boxSize: boxSize,
-      voxelSize: voxelSize
+      voxelSize: voxelSize,
+      voxelThickness: voxelThickness,
+      baseSize: baseSize
     )
   }
 
@@ -101,10 +116,29 @@ final class VoxelOuterLayerBuilder {
     from skinImage: NSImage,
     specs: [CubeFace.Spec],
     boxSize: SCNVector3,
-    voxelSize: CGFloat
+    voxelSize: CGFloat,
+    voxelThickness: CGFloat?,
+    baseSize: SCNVector3?
   ) {
-    // Small inward offset so voxels sit just above the base geometry without Z-fighting.
-    let halfThickness: CGFloat = 0.5
+    // Half voxel size for outward offset: place voxel center so its edge touches the base layer surface
+    // This ensures no gap between first and second layers
+    let halfVoxelSize: CGFloat = voxelSize / 2.0
+    
+    // Calculate size difference between outer layer and base layer
+    // If baseSize is provided, calculate actual difference; otherwise use default 0.5
+    let sizeDifference: CGFloat
+    if let base = baseSize {
+      // For cubic shapes (head), use the difference in any dimension
+      // For non-cubic shapes (body), use average difference
+      let diffX = CGFloat(boxSize.x) - CGFloat(base.x)
+      let diffY = CGFloat(boxSize.y) - CGFloat(base.y)
+      let diffZ = CGFloat(boxSize.z) - CGFloat(base.z)
+      // Use average difference, or for cubes, all dimensions should be the same
+      sizeDifference = (diffX + diffY + diffZ) / 3.0
+    } else {
+      // Default for backward compatibility (body case)
+      sizeDifference = 0.5
+    }
 
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
@@ -163,13 +197,50 @@ final class VoxelOuterLayerBuilder {
             voxelSize: voxelSize
           )
 
+          // Calculate actual size difference for this specific face
+          let faceSizeDifference: CGFloat
+          if let base = baseSize {
+            switch faceIndex {
+            case 0, 2: // front/back - use depth (z)
+              faceSizeDifference = CGFloat(boxSize.z) - CGFloat(base.z)
+            case 1, 3: // right/left - use width (x)
+              faceSizeDifference = CGFloat(boxSize.x) - CGFloat(base.x)
+            case 4, 5: // top/bottom - use height (y)
+              faceSizeDifference = CGFloat(boxSize.y) - CGFloat(base.y)
+            default:
+              faceSizeDifference = sizeDifference
+            }
+          } else {
+            faceSizeDifference = sizeDifference
+          }
+          
+          // Determine voxel thickness for this face
+          let thickness: CGFloat
+          if let customThickness = voxelThickness {
+            thickness = customThickness
+          } else {
+            // Default thickness based on size difference
+            thickness = faceSizeDifference
+          }
+          
+          // Half thickness for position adjustment (perpendicular to face)
+          let halfThickness = thickness / 2.0
+          
           voxelPosition = adjustVoxelPosition(
             voxelPosition,
             faceIndex: faceIndex,
-            halfThickness: halfThickness
+            boxSize: boxSize,
+            halfThickness: halfThickness,
+            sizeDifference: faceSizeDifference
           )
 
-          let voxelNode = createVoxelNode(color: color, position: voxelPosition, size: voxelSize)
+          let voxelNode = createVoxelNode(
+            color: color,
+            position: voxelPosition,
+            faceIndex: faceIndex,
+            voxelSize: voxelSize,
+            thickness: thickness
+          )
           containerNode.addChildNode(voxelNode)
         }
       }
@@ -191,12 +262,39 @@ final class VoxelOuterLayerBuilder {
   }
 
   /// Create a single voxel node with the given color and position.
+  /// The voxel thickness varies based on the face direction.
   private func createVoxelNode(
     color: NSColor,
     position: SCNVector3,
-    size: CGFloat
+    faceIndex: Int,
+    voxelSize: CGFloat,
+    thickness: CGFloat
   ) -> SCNNode {
-    let voxelGeometry = SCNBox(width: size, height: size, length: size, chamferRadius: 0)
+    let width: CGFloat
+    let height: CGFloat
+    let length: CGFloat
+    
+    // Create voxel with reduced thickness in the direction perpendicular to the face
+    switch faceIndex {
+    case 0, 2: // front/back - thin in Z direction
+      width = voxelSize
+      height = voxelSize
+      length = thickness
+    case 1, 3: // right/left - thin in X direction
+      width = thickness
+      height = voxelSize
+      length = voxelSize
+    case 4, 5: // top/bottom - thin in Y direction
+      width = voxelSize
+      height = thickness
+      length = voxelSize
+    default:
+      width = voxelSize
+      height = voxelSize
+      length = thickness
+    }
+    
+    let voxelGeometry = SCNBox(width: width, height: height, length: length, chamferRadius: 0)
     let material = SCNMaterial()
     configureBaseMaterialProperties(material, color: color)
 
@@ -207,26 +305,51 @@ final class VoxelOuterLayerBuilder {
     return node
   }
 
-  /// Adjust voxel position so it sits slightly "inside" the overlay thickness
-  /// to avoid Z-fighting with the base geometry.
+  /// Adjust voxel position so it sits on the base layer surface with no gap.
+  /// Calculates the offset needed to place voxel edge exactly on the first layer surface.
+  /// The size difference between outer and base layers determines how much to offset.
+  /// Uses halfThickness (half of voxel thickness perpendicular to face) instead of halfVoxelSize.
   private func adjustVoxelPosition(
     _ position: SCNVector3,
     faceIndex: Int,
-    halfThickness: CGFloat
+    boxSize: SCNVector3,
+    halfThickness: CGFloat,
+    sizeDifference: CGFloat
   ) -> SCNVector3 {
+    // Calculate size difference between second and first layer
+    // Each side extends by half the size difference
+    let halfSizeDifference = sizeDifference / 2.0
+    
+    // calculateVoxelPosition places voxel center at second layer surface
+    // We want voxel edge (in the perpendicular direction) to touch first layer surface (no gap)
+    // First layer surface = second layer surface - halfSizeDifference
+    // Voxel center should be at: first layer surface + halfThickness
+    // = (second layer surface - halfSizeDifference) + halfThickness
+    // = second layer surface + (halfThickness - halfSizeDifference)
+    // So offset = halfThickness - halfSizeDifference
+    // For head (thickness=0.5, halfThickness=0.25, halfSizeDifference=0.125): 0.25 - 0.125 = 0.125
+    // For body (thickness=0.25, halfThickness=0.125, halfSizeDifference=0.0625): 0.125 - 0.0625 = 0.0625
+    
+    var offset = halfThickness - halfSizeDifference
+    
+    // Ensure minimum offset to avoid Z-fighting
+    if abs(offset) < 0.001 {
+      offset = 0.01  // Small outward offset to ensure tight fit
+    }
+    
     switch faceIndex {
-    case 0: // front
-      return SCNVector3(position.x, position.y, position.z - halfThickness)
-    case 1: // right
-      return SCNVector3(position.x - halfThickness, position.y, position.z)
-    case 2: // back
-      return SCNVector3(position.x, position.y, position.z + halfThickness)
-    case 3: // left
-      return SCNVector3(position.x + halfThickness, position.y, position.z)
-    case 4: // top
-      return SCNVector3(position.x, position.y - halfThickness, position.z)
-    case 5: // bottom
-      return SCNVector3(position.x, position.y + halfThickness, position.z)
+    case 0: // front (+Z) - move outward
+      return SCNVector3(position.x, position.y, position.z + offset)
+    case 1: // right (+X) - move outward
+      return SCNVector3(position.x + offset, position.y, position.z)
+    case 2: // back (-Z) - move outward
+      return SCNVector3(position.x, position.y, position.z - offset)
+    case 3: // left (-X) - move outward
+      return SCNVector3(position.x - offset, position.y, position.z)
+    case 4: // top (+Y) - move outward
+      return SCNVector3(position.x, position.y + offset, position.z)
+    case 5: // bottom (-Y) - move outward
+      return SCNVector3(position.x, position.y - offset, position.z)
     default:
       return position
     }

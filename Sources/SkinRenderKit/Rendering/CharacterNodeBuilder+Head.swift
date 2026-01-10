@@ -40,12 +40,15 @@ extension CharacterNodeBuilder {
     // Hat layer (voxelized outer layer)
     let hatSize = CharacterDimensions.hatSize
     let hatBoxSize = SCNVector3(hatSize, hatSize, hatSize)
+    let headBaseSize = SCNVector3(headSize, headSize, headSize)
     let hatNode = voxelBuilder.buildVoxelOverlay(
       from: skinImage,
       specs: CubeFace.headHat,
       boxSize: hatBoxSize,
       position: SCNVector3Zero,
-      name: "Hat"
+      name: "Hat",
+      voxelThickness: 0.5,
+      baseSize: headBaseSize
     )
     headGroup.addChildNode(hatNode)
 

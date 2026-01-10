@@ -47,12 +47,19 @@ extension CharacterNodeBuilder {
       CharacterDimensions.jacketHeight,
       CharacterDimensions.jacketDepth
     )
+    let bodyBaseSize = SCNVector3(
+      CharacterDimensions.bodyWidth,
+      CharacterDimensions.bodyHeight,
+      CharacterDimensions.bodyDepth
+    )
     let jacketNode = voxelBuilder.buildVoxelOverlay(
       from: skinImage,
       specs: CubeFace.bodyJacket,
       boxSize: jacketBoxSize,
       position: SCNVector3Zero,
-      name: "Jacket"
+      name: "Jacket",
+      voxelThickness: 0.25,
+      baseSize: bodyBaseSize
     )
     bodyGroup.addChildNode(jacketNode)
 
