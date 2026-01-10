@@ -95,8 +95,8 @@ public enum CharacterDimensions {
   /// Cape height (16 pixels)
   public static let capeHeight: CGFloat = 16
 
-  /// Cape depth/thickness (1 pixel)
-  public static let capeDepth: CGFloat = 1.0
+  /// Cape depth/thickness (0.5 pixel)
+  public static let capeDepth: CGFloat = 0.5
 
   /// Cape pivot Y position (shoulder line)
   public static let capePivotY: CGFloat = 11

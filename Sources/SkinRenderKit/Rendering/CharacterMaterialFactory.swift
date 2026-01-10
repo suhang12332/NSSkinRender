@@ -167,12 +167,21 @@ public final class CharacterMaterialFactory {
   /// - Returns: Array of 6 materials for each cube face
   public func createCapeMaterials(from capeImage: NSImage) -> [SCNMaterial] {
     var materials: [SCNMaterial] = []
+    materials.reserveCapacity(6)  // 预分配容量
 
     for spec in CubeFace.cape {
       let material = SCNMaterial()
 
-      switch TextureProcessor.crop(capeImage, rect: spec.rect) {
-      case .success(let croppedImage):
+      // 优化：使用纹理缓存获取裁剪结果和透明度信息
+      let cropResult = textureCache.getOrCrop(
+        image: capeImage,
+        rect: spec.rect
+      ) { image, rect in
+        TextureProcessor.crop(image, rect: rect)
+      }
+
+      switch cropResult {
+      case .success(let (croppedImage, _)):
         let finalImage: NSImage
         if spec.rotate180 {
           finalImage = (try? TextureProcessor.rotate(croppedImage, degrees: 180).get()) ?? croppedImage
@@ -227,18 +236,31 @@ public final class CharacterMaterialFactory {
     for (index, spec) in specs.enumerated() {
       let material = SCNMaterial()
 
-      // 裁剪图像
-      guard case .success(let croppedImage) = TextureProcessor.crop(skinImage, rect: spec.rect) else {
-        material.diffuse.contents = isOuter
-          ? NSColor.blue.withAlphaComponent(0.5)
-          : NSColor.red
-        materials.append(material)
-        continue
-      }
-
-      // 应用变换（仅对bottom face）
+      // 优化：使用纹理缓存获取裁剪结果和透明度信息
+      // 注意：bottom face需要变换，变换后的图像不会被缓存（或需要特殊处理）
+      let needsTransform = index == 5  // bottom face
+      
       let finalImage: NSImage
-      if index == 5 {  // bottom face需要变换
+      let hasTransparency: Bool
+      
+      if needsTransform {
+        // bottom face需要变换，先获取裁剪结果
+        let cropResult = textureCache.getOrCrop(
+          image: skinImage,
+          rect: spec.rect
+        ) { image, rect in
+          TextureProcessor.crop(image, rect: rect)
+        }
+        
+        guard case .success(let (croppedImage, _)) = cropResult else {
+          material.diffuse.contents = isOuter
+            ? NSColor.blue.withAlphaComponent(0.5)
+            : NSColor.red
+          materials.append(material)
+          continue
+        }
+        
+        // 应用变换（变换后的图像不使用缓存）
         let transformResult: Result<NSImage, TextureProcessor.Error>
         if isLimb {
           transformResult = TextureProcessor.applyBottomFaceTransform(
@@ -254,15 +276,33 @@ public final class CharacterMaterialFactory {
           )
         }
         finalImage = (try? transformResult.get()) ?? croppedImage
+        // 变换后需要重新检测透明度
+        hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
       } else {
-        finalImage = croppedImage
+        // 其他面直接使用缓存的结果（包括透明度信息）
+        let cropResult = textureCache.getOrCrop(
+          image: skinImage,
+          rect: spec.rect
+        ) { image, rect in
+          TextureProcessor.crop(image, rect: rect)
+        }
+        
+        guard case .success(let (cropped, transparency)) = cropResult else {
+          material.diffuse.contents = isOuter
+            ? NSColor.blue.withAlphaComponent(0.5)
+            : NSColor.red
+          materials.append(material)
+          continue
+        }
+        
+        finalImage = cropped
+        hasTransparency = transparency
       }
 
       configureBaseMaterialProperties(material, image: finalImage)
 
       // Set transparency for outer layers
       if isOuter {
-        let hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
         configureTransparency(
           material,
           transparency: hasTransparency ? 1.0 : 0.9,

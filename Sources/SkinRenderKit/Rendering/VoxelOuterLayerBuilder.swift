@@ -237,6 +237,10 @@ final class VoxelOuterLayerBuilder {
       }
 
       // 第二阶段优化：行内合并 - 逐行处理并合并连续相同颜色的像素段
+      // 第四阶段优化：收集所有段，按颜色分组，批量创建节点
+      var allSegments: [(segment: VoxelSegment, position: SCNVector3, mergedWidth: CGFloat)] = []
+      allSegments.reserveCapacity(height * 10)  // 预分配容量，假设平均每行10个段
+      
       for y in 0..<height {
         // 处理当前行，合并连续相同颜色的像素段
         let segments = processRowPixels(
@@ -246,22 +250,14 @@ final class VoxelOuterLayerBuilder {
           bytesPerRow: bytesPerRow
         )
         
-        // 为每个合并后的段创建一个体素节点
+        // 计算每个段的位置信息
         for segment in segments {
           let segmentLength = segment.endX - segment.startX
           let mergedWidth = CGFloat(segmentLength) * config.voxelSize
           
           // 计算段的中心位置
-          // 原单个像素位置公式：px = startX + CGFloat(x) * config.voxelSize
-          // 其中 x 是像素索引（0, 1, 2, ...），位置是像素的中心
-          // 对于合并的段 [start, end)，包含 end - start 个像素（start, start+1, ..., end-1）
-          // 段的中心应该在这些像素的中心位置的平均值
-          // 使用段的几何中心：(start + end) / 2.0 是段的边界中心，但需要减0.5得到像素中心
-          // 实际上应该是：(start + end - 1) / 2.0，这是像素索引的中心
-          // 但对于更精确的计算，可以使用：(start + end) / 2.0 - 0.5
           let segmentStart = CGFloat(segment.startX)
           let segmentEnd = CGFloat(segment.endX)
-          // 段的中心索引：使用 (start + end - 1) / 2.0 确保精确对齐
           let centerPixelIndex = (segmentStart + segmentEnd - 1.0) / 2.0
           let centerOffset = centerPixelIndex * config.voxelSize
           
@@ -302,14 +298,29 @@ final class VoxelOuterLayerBuilder {
             continue
           }
           
-          // 创建合并后的体素节点
-          // 第三阶段优化：直接传递RGB值，避免多次创建NSColor对象
+          allSegments.append((segment: segment, position: voxelPosition, mergedWidth: mergedWidth))
+        }
+      }
+      
+      // 按颜色键分组段（第四阶段优化：减少相同材质的使用）
+      let segmentsByColor = Dictionary(grouping: allSegments) { $0.segment.colorKey }
+      
+      // 为每个颜色组批量创建节点
+      for (colorKey, colorSegments) in segmentsByColor {
+        // 获取材质（使用第一个段的RGB值，因为同组的颜色相同）
+        let firstSegment = colorSegments[0].segment
+        let material = getOrCreateMaterial(
+          r: firstSegment.r,
+          g: firstSegment.g,
+          b: firstSegment.b,
+          a: firstSegment.a
+        )
+        
+        // 为每个段创建节点（使用缓存的材质）
+        for (segment, position, mergedWidth) in colorSegments {
           let voxelNode = createMergedVoxelNode(
-            r: segment.r,
-            g: segment.g,
-            b: segment.b,
-            a: segment.a,
-            position: voxelPosition,
+            material: material,
+            position: position,
             faceIndex: faceIndex,
             voxelSize: config.voxelSize,
             mergedWidth: mergedWidth,
@@ -549,6 +560,46 @@ final class VoxelOuterLayerBuilder {
   }
   
   /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
+  /// 第四阶段优化：接受预创建的材质，避免重复创建
+  /// - Parameters:
+  ///   - material: 预创建的材质
+  ///   - position: 体素位置（中心点）
+  ///   - faceIndex: 面索引
+  ///   - voxelSize: 基础体素大小
+  ///   - mergedWidth: 合并后的宽度（可以是多个像素的宽度）
+  ///   - thickness: 体素厚度
+  /// - Returns: 合并后的体素节点
+  private func createMergedVoxelNode(
+    material: SCNMaterial,
+    position: SCNVector3,
+    faceIndex: Int,
+    voxelSize: CGFloat,
+    mergedWidth: CGFloat,
+    thickness: CGFloat
+  ) -> SCNNode {
+    let (width, height, length): (CGFloat, CGFloat, CGFloat)
+    
+    switch faceIndex {
+    case 0, 2: // front/back - Z方向薄，宽度可变
+      (width, height, length) = (mergedWidth, voxelSize, thickness)
+    case 1, 3: // right/left - X方向薄，长度可变
+      (width, height, length) = (thickness, voxelSize, mergedWidth)
+    case 4, 5: // top/bottom - Y方向薄，宽度可变
+      (width, height, length) = (mergedWidth, thickness, voxelSize)
+    default:
+      (width, height, length) = (mergedWidth, voxelSize, thickness)
+    }
+    
+    let voxelGeometry = SCNBox(width: width, height: height, length: length, chamferRadius: 0)
+    // 第四阶段优化：使用预创建的材质，避免重复创建
+    voxelGeometry.materials = [material]
+
+    let node = SCNNode(geometry: voxelGeometry)
+    node.position = position
+    return node
+  }
+  
+  /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
   /// 第三阶段优化：直接从RGB值创建，避免NSColor对象创建
   /// - Parameters:
   ///   - r: 红色分量 (0-255)
@@ -572,27 +623,16 @@ final class VoxelOuterLayerBuilder {
     mergedWidth: CGFloat,
     thickness: CGFloat
   ) -> SCNNode {
-    let (width, height, length): (CGFloat, CGFloat, CGFloat)
-    
-    switch faceIndex {
-    case 0, 2: // front/back - Z方向薄，宽度可变
-      (width, height, length) = (mergedWidth, voxelSize, thickness)
-    case 1, 3: // right/left - X方向薄，长度可变
-      (width, height, length) = (thickness, voxelSize, mergedWidth)
-    case 4, 5: // top/bottom - Y方向薄，宽度可变
-      (width, height, length) = (mergedWidth, thickness, voxelSize)
-    default:
-      (width, height, length) = (mergedWidth, voxelSize, thickness)
-    }
-    
-    let voxelGeometry = SCNBox(width: width, height: height, length: length, chamferRadius: 0)
     // 第三阶段优化：直接使用RGB值创建材质，避免不必要的NSColor对象创建
     let material = getOrCreateMaterial(r: r, g: g, b: b, a: a)
-    voxelGeometry.materials = [material]
-
-    let node = SCNNode(geometry: voxelGeometry)
-    node.position = position
-    return node
+    return createMergedVoxelNode(
+      material: material,
+      position: position,
+      faceIndex: faceIndex,
+      voxelSize: voxelSize,
+      mergedWidth: mergedWidth,
+      thickness: thickness
+    )
   }
   
   /// 创建合并的体素节点（从NSColor，保留用于兼容性）
