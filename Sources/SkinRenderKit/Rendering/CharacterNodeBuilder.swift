@@ -131,7 +131,10 @@ public final class CharacterNodeBuilder {
 
   public init(materialFactory: CharacterMaterialFactory) {
     self.materialFactory = materialFactory
-    self.voxelBuilder = VoxelOuterLayerBuilder()
+    
+    // 共享materialFactory的textureCache，避免重复缓存
+    // 这样materialFactory和voxelBuilder可以共享同一个缓存实例
+    self.voxelBuilder = VoxelOuterLayerBuilder(textureCache: materialFactory.textureCache)
   }
 
   // MARK: - Build Character

@@ -16,9 +16,25 @@ public class SceneKitCharacterViewController: NSViewController {
 
   // MARK: - Dependencies
 
-  let materialFactory = CharacterMaterialFactory()
+  /// 共享的纹理缓存，用于优化裁剪和透明度检测
+  private let sharedTextureCache = TextureCache()
+  let materialFactory: CharacterMaterialFactory
   lazy var nodeBuilder = CharacterNodeBuilder(materialFactory: materialFactory)
   let animationController = CharacterAnimationController()
+  
+  // MARK: - Initialization
+  
+  public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+    // 创建共享缓存的materialFactory
+    self.materialFactory = CharacterMaterialFactory(textureCache: sharedTextureCache)
+    super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+  }
+  
+  public required init?(coder: NSCoder) {
+    // 创建共享缓存的materialFactory
+    self.materialFactory = CharacterMaterialFactory(textureCache: sharedTextureCache)
+    super.init(coder: coder)
+  }
 
   // MARK: - Character State
 
@@ -182,6 +198,10 @@ public class SceneKitCharacterViewController: NSViewController {
       cleanupNode(oldRoot)
       oldRoot.removeFromParentNode()
     }
+    
+    // 清空纹理缓存，确保使用新的皮肤纹理
+    // 这避免了缓存混乱导致的材质显示错误
+    materialFactory.textureCache.clear()
 
     guard let skinImage = skinImage else {
       characterNodes = nil

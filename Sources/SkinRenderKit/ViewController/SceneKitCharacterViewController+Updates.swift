@@ -170,6 +170,10 @@ extension SceneKitCharacterViewController {
     guard let image = skinImage else {
       return
     }
+    
+    // 清空纹理缓存，避免使用旧皮肤的缓存结果
+    // 这确保了每次皮肤更新时都使用新的裁剪结果
+    materialFactory.textureCache.clear()
 
     // 1. 基础几何（SCNBox）清理旧材质后重生成材质
     if let headGeometry = nodes.head.geometry {
