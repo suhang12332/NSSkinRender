@@ -37,46 +37,46 @@ extension SceneKitCharacterViewController {
   }
 
   func setupLighting() {
-    // Ambient light - 增加环境光强度，让整体更亮
+    // Ambient light - 柔和的环境光，保持自然层次
     scene.rootNode.addChildNode(createLightNode(
       type: .ambient,
-      intensity: 400,
-      color: NSColor(white: 0.85, alpha: 1.0)
+      intensity: 200,
+      color: NSColor(white: 0.9, alpha: 1.0)
     ))
 
-    // Main directional light with shadows - 增强主光源强度
+    // Main directional light with shadows - 从侧面前方照射，模拟自然光
     let directionalLight = createLightNode(
       type: .directional,
-      intensity: 1600,
-      color: NSColor(white: 1.0, alpha: 1.0),
+      intensity: 1200,
+      color: NSColor(red: 1.0, green: 0.97, blue: 0.92, alpha: 1.0),  // slightly warm
       castsShadow: true,
-      eulerAngles: SCNVector3(-Float.pi / 3, Float.pi / 4, 0)
+      eulerAngles: SCNVector3(-Float.pi / 4, Float.pi / 5, 0)  // 侧面前方：前方约36度，高度约45度
     )
     if let light = directionalLight.light {
       configureShadowLight(light)
     }
     scene.rootNode.addChildNode(directionalLight)
 
-    // Fill light (auxiliary directional light) - 增加补光强度
+    // Fill light (auxiliary directional light) - 从另一侧前方补光，减少对比
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
-      intensity: 350,
-      color: NSColor(white: 0.95, alpha: 1.0),
-      eulerAngles: SCNVector3(-Float.pi / 4, -Float.pi / 3, 0)
+      intensity: 500,
+      color: NSColor(red: 0.92, green: 0.96, blue: 1.0, alpha: 1.0),  // slightly cool
+      eulerAngles: SCNVector3(-Float.pi / 4, -Float.pi / 5, 0)  // 另一侧前方补光
     ))
 
-    // Rim/back light (outline light) - 增强轮廓光
+    // Rim/back light (outline light) - 柔和背光，避免过曝
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
-      intensity: 400,
+      intensity: 280,
       color: NSColor(white: 1.0, alpha: 1.0),
-      eulerAngles: SCNVector3(-Float.pi / 3.5, Float.pi * 0.75, 0)
+      eulerAngles: SCNVector3(-Float.pi / 3, -Float.pi * 0.65, 0)
     ))
 
-    // Top omni light - 增加顶部点光源强度
+    // Top omni light - 少量顶光，提亮头部和肩线
     scene.rootNode.addChildNode(createLightNode(
       type: .omni,
-      intensity: 450,
+      intensity: 220,
       color: NSColor(white: 1.0, alpha: 1.0),
       position: SCNVector3(0, 25, 0)
     ))
