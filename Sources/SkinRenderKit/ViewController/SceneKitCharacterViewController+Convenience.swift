@@ -103,6 +103,3 @@ extension SceneKitCharacterViewController {
   }
 }
 
-#Preview {
-  SceneKitCharacterViewController(rotationDuration: 12)
-}
