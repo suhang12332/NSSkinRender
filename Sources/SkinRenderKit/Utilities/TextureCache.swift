@@ -8,16 +8,16 @@
 import AppKit
 
 /// Cache key for texture cropping operations
-/// 注意：使用图像尺寸和裁剪区域作为键，而不是对象标识符
-/// 这样即使同一个NSImage对象被重新加载不同内容，只要尺寸相同就能正确缓存
+/// Note: Uses image size and crop region as key, not object identifier
+/// This way even if the same NSImage object is reloaded with different content, caching works correctly as long as the size is the same
 private struct CropCacheKey: Hashable {
   let imageSize: CGSize
   let rect: CGRect
   
   init(image: NSImage, rect: CGRect) {
-    // 使用图像的尺寸作为键的一部分，而不是对象标识符
-    // 这样可以避免同一NSImage对象在不同时间加载不同内容时的缓存混乱
-    // 但更好的做法是在皮肤更新时清空缓存（已在updateSkinGeometry中实现）
+    // Use the image size as part of the key, not the object identifier
+    // This avoids cache confusion when the same NSImage object loads different content at different times
+    // But a better approach is to clear the cache when the skin updates (already implemented in updateSkinGeometry)
     self.imageSize = image.size
     self.rect = rect
   }
@@ -35,31 +35,25 @@ private struct CropCacheEntry {
 }
 
 /// Cache manager for texture operations
-/// 纹理操作缓存管理器，用于避免重复的裁剪和透明度检测操作
+/// Texture operation cache manager, used to avoid redundant cropping and transparency detection operations
 public final class TextureCache {
   
-  // MARK: - Cache Storage
-  
-  /// 裁剪结果缓存：键为 (image, rect)，值为裁剪后的图像
+  /// Crop result cache: key is (image, rect), value is cropped image
   private var cropCache: [CropCacheKey: CropCacheEntry] = [:]
   
-  /// 最大缓存条目数（防止内存无限增长）
+  /// Maximum cache entries (prevents unbounded memory growth)
   private let maxCacheSize: Int
-  
-  // MARK: - Initialization
   
   public init(maxCacheSize: Int = 100) {
     self.maxCacheSize = maxCacheSize
   }
   
-  // MARK: - Crop Cache
-  
-  /// 获取或执行裁剪操作（带缓存）
+  /// Get or perform crop operation (with caching)
   /// - Parameters:
-  ///   - image: 源图像
-  ///   - rect: 裁剪区域
-  ///   - cropFunction: 实际的裁剪函数
-  /// - Returns: 裁剪结果和透明度信息
+  ///   - image: Source image
+  ///   - rect: Crop region
+  ///   - cropFunction: Actual crop function
+  /// - Returns: Crop result and transparency info
   internal func getOrCrop(
     image: NSImage,
     rect: CGRect,
@@ -67,25 +61,25 @@ public final class TextureCache {
   ) -> Result<(NSImage, Bool), TextureProcessor.Error> {
     let key = CropCacheKey(image: image, rect: rect)
     
-    // 检查缓存
+    // Check cache
     if let cached = cropCache[key] {
       return .success((cached.croppedImage, cached.hasTransparency))
     }
     
-    // 执行裁剪
+    // Perform crop
     let cropResult = cropFunction(image, rect)
     
     guard case .success(let croppedImage) = cropResult else {
       return cropResult.map { ($0, false) }
     }
     
-    // 检测透明度（在裁剪时一并检测，避免后续重复检测）
+    // Detect transparency (detect during cropping to avoid redundant detection later)
     let hasTransparency = TextureProcessor.hasTransparentPixels(croppedImage)
     
-    // 缓存结果
+    // Cache result
     let entry = CropCacheEntry(croppedImage: croppedImage, hasTransparency: hasTransparency)
     
-    // 如果缓存已满，移除最旧的条目（简单的FIFO策略）
+    // If cache is full, remove the oldest entry (simple FIFO strategy)
     if cropCache.count >= maxCacheSize {
       let oldestKey = cropCache.keys.first!
       cropCache.removeValue(forKey: oldestKey)
@@ -96,14 +90,12 @@ public final class TextureCache {
     return .success((croppedImage, hasTransparency))
   }
   
-  // MARK: - Cache Management
-  
-  /// 清空所有缓存
+  /// Clear all caches
   public func clear() {
     cropCache.removeAll()
   }
   
-  /// 获取当前缓存大小
+  /// Get current cache size
   public var cacheSize: Int {
     cropCache.count
   }

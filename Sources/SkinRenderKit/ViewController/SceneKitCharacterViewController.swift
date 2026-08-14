@@ -9,52 +9,38 @@ import SceneKit
 
 public class SceneKitCharacterViewController: NSViewController {
 
-  // MARK: - Scene Components
-
   var scnView: SCNView!
   var scene: SCNScene!
 
-  // MARK: - Dependencies
-
-  /// 共享的纹理缓存，用于优化裁剪和透明度检测
+  /// Shared texture cache for optimizing cropping and transparency detection
   private let sharedTextureCache = TextureCache()
   let materialFactory: CharacterMaterialFactory
   lazy var nodeBuilder = CharacterNodeBuilder(materialFactory: materialFactory)
   let animationController = CharacterAnimationController()
   
-  // MARK: - Initialization
-  
   public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-    // 创建共享缓存的materialFactory
+    // Create materialFactory with shared cache
     self.materialFactory = CharacterMaterialFactory(textureCache: sharedTextureCache)
     super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
   }
   
   public required init?(coder: NSCoder) {
-    // 创建共享缓存的materialFactory
+    // Create materialFactory with shared cache
     self.materialFactory = CharacterMaterialFactory(textureCache: sharedTextureCache)
     super.init(coder: coder)
   }
 
-  // MARK: - Character State
-
   var characterNodes: CharacterNodeBuilder.CharacterNodes?
-
-  // MARK: - Texture Settings
 
   var skinTexturePath: String?
   var skinImage: NSImage?
   var capeTexturePath: String?
   var capeImage: NSImage?
 
-  // MARK: - Configuration
-
   var playerModel: PlayerModel = .steve
   var rotationDuration: TimeInterval = 15.0
   var backgroundColor: NSColor = .clear
   var debugMode: Bool = false
-
-  // MARK: - Bottom Face Configuration
 
   /// Limb bottom-face flip configuration
   public var limbBottomFlipMode: TextureProcessor.FlipMode {
@@ -77,12 +63,8 @@ public class SceneKitCharacterViewController: NSViewController {
     set { materialFactory.bottomFaceConfig.headBodyRotate180 = newValue }
   }
 
-  // MARK: - UI State
-
   var showOuterLayers: Bool = true
   var showCape: Bool = true
-
-  // MARK: - Debug UI
 
   private enum DebugButtonConfig {
     static let xPosition: CGFloat = 20
@@ -148,8 +130,6 @@ public class SceneKitCharacterViewController: NSViewController {
     return button
   }
 
-  // MARK: - Lifecycle
-
   public override func loadView() {
     scnView = SCNView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
     self.view = scnView
@@ -171,17 +151,15 @@ public class SceneKitCharacterViewController: NSViewController {
   
   public override func viewWillDisappear() {
     super.viewWillDisappear()
-    // 页面即将关闭时立即停止动画和清理资源
+    // Stop animations and clean up resources immediately when page is about to close
     cleanupResources()
   }
   
   public override func viewDidDisappear() {
     super.viewDidDisappear()
-    // 页面已关闭，确保所有资源都已释放
+    // Page is closed, ensure all resources are released
     cleanupResources()
   }
-
-  // MARK: - Character Building
 
   func rebuildCharacter() {
     // Stop all animations before removing nodes
@@ -199,8 +177,8 @@ public class SceneKitCharacterViewController: NSViewController {
       oldRoot.removeFromParentNode()
     }
     
-    // 清空纹理缓存，确保使用新的皮肤纹理
-    // 这避免了缓存混乱导致的材质显示错误
+    // Clear texture cache to ensure new skin textures are used
+    // This avoids material display errors caused by cache confusion
     materialFactory.textureCache.clear()
 
     guard let skinImage = skinImage else {
@@ -256,10 +234,8 @@ public class SceneKitCharacterViewController: NSViewController {
     }
   }
   
-  // MARK: - Cleanup
-  
-  /// 清理所有资源（在页面关闭时调用）
-  /// 可以手动调用以确保资源被释放
+  /// Clean up all resources (called when page is closed)
+  /// Can be called manually to ensure resources are released
   func cleanupResources() {
     // Stop all animations
     animationController.resetAllAnimations()
@@ -289,7 +265,7 @@ public class SceneKitCharacterViewController: NSViewController {
   }
   
   deinit {
-    // 最终清理，确保所有资源都被释放
+    // Final cleanup, ensure all resources are released
     cleanupResources()
     
     // Clear texture references to help ARC release image memory

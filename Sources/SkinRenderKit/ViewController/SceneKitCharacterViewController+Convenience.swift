@@ -5,8 +5,6 @@
 
 import SceneKit
 
-// MARK: - Usage Helper
-
 extension SceneKitCharacterViewController {
 
   public static func presentInNewWindow(
@@ -30,8 +28,6 @@ extension SceneKitCharacterViewController {
     window.makeKeyAndOrderFront(nil)
   }
 }
-
-// MARK: - Convenience Initialization
 
 extension SceneKitCharacterViewController {
 
@@ -106,8 +102,6 @@ extension SceneKitCharacterViewController {
     )
   }
 }
-
-// MARK: - Legacy Compatibility
 
 extension SceneKitCharacterViewController {
   /// Legacy enum for backward compatibility

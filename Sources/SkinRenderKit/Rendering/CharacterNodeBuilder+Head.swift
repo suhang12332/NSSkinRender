@@ -16,8 +16,6 @@ struct HeadNodes {
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Head
-
   func buildHead(
     skinImage: NSImage,
     parent: SCNNode

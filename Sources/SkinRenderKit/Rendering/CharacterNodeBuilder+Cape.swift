@@ -9,8 +9,6 @@ import SceneKit
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Cape
-
   func buildCape(
     capeImage: NSImage,
     parent: SCNNode

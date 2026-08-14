@@ -18,8 +18,6 @@ public struct BoxDimensions {
   }
 }
 
-// MARK: - Player Model Types
-
 /// Represents the supported Minecraft player model variants.
 ///
 /// Steve and Alex differ primarily in arm width, which affects geometry

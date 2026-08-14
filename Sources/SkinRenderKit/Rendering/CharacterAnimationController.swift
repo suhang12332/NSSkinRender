@@ -10,11 +10,7 @@ import SceneKit
 /// Controller responsible for managing all character animations
 public final class CharacterAnimationController {
 
-  // MARK: - Node References
-
   private weak var characterNodes: CharacterNodeBuilder.CharacterNodes?
-
-  // MARK: - Animation Configuration
 
   /// Duration for one complete rotation (0 = no rotation)
   public var rotationDuration: TimeInterval = CharacterDimensions.Animation.defaultRotationDuration
@@ -25,15 +21,11 @@ public final class CharacterAnimationController {
   /// Whether cape sway animation is enabled
   public private(set) var capeSwayEnabled: Bool = true
 
-  // MARK: - Cape Sway Configuration
-
   /// Base amplitude for cape sway animation
   public var baseCapeSwayAmplitude: Float = CharacterDimensions.Animation.capeSwayAmplitude
 
   /// Multiplier for cape sway when walking
   public var walkingCapeSwayMultiplier: Float = CharacterDimensions.Animation.capeSwayWalkingMultiplier
-
-  // MARK: - Walking Animation Configuration
 
   /// Arm swing amplitude in radians
   private let armSwingAmplitude: CGFloat = CharacterDimensions.Animation.armSwingAmplitude
@@ -47,8 +39,6 @@ public final class CharacterAnimationController {
   /// Head bob distance
   private let headBobDistance: CGFloat = CharacterDimensions.Animation.headBobDistance
 
-  // MARK: - Animation Keys
-
   private enum AnimationKey {
     static let rotation = "rotationAnimation"
     static let capeSway = "capeSwayAnimation"
@@ -56,19 +46,13 @@ public final class CharacterAnimationController {
     static let headBob = "headBob"
   }
 
-  // MARK: - Initialization
-
   public init() {}
-
-  // MARK: - Attach Nodes
 
   /// Attach character nodes to control
   /// - Parameter nodes: The character nodes to animate
   public func attach(to nodes: CharacterNodeBuilder.CharacterNodes) {
     self.characterNodes = nodes
   }
-
-  // MARK: - Rotation Animation
 
   /// Setup or update the rotation animation
   public func setupRotationAnimation() {
@@ -102,8 +86,6 @@ public final class CharacterAnimationController {
     self.rotationDuration = duration
     setupRotationAnimation()
   }
-
-  // MARK: - Walking Animation
 
   /// Start the walking animation
   public func startWalkingAnimation() {
@@ -232,8 +214,6 @@ public final class CharacterAnimationController {
     )
   }
 
-  // MARK: - Cape Animation
-
   /// Add cape sway animation
   public func addCapeSwayAnimation() {
     guard let capePivot = characterNodes?.capePivot else { return }
@@ -303,8 +283,6 @@ public final class CharacterAnimationController {
     characterNodes?.capePivot?.removeAction(forKey: AnimationKey.capeSway)
     addCapeSwayAnimation()
   }
-
-  // MARK: - Reset All Animations
 
   /// Stop all animations and reset to default state
   public func resetAllAnimations() {

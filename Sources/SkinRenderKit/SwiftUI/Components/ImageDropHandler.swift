@@ -11,16 +11,12 @@ internal import UniformTypeIdentifiers
 /// Handler for loading and validating dropped images
 public enum ImageDropHandler {
 
-  // MARK: - Validation Results
-
   /// Result of image validation
   public enum ValidationResult {
     case valid(NSImage)
     case invalidDimensions(width: Int, height: Int, expected: String)
     case loadFailed(String)
   }
-
-  // MARK: - Image Loading
 
   /// Load an NSImage from an NSItemProvider
   /// - Parameters:
@@ -129,8 +125,6 @@ public enum ImageDropHandler {
       }
     }
   }
-
-  // MARK: - Validation
 
   /// Validate an image as a Minecraft skin
   /// - Parameter image: The image to validate

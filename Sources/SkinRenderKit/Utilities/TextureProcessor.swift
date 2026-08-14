@@ -10,8 +10,6 @@ import AppKit
 /// Texture processing utilities for cropping, rotating, and flipping images
 public enum TextureProcessor {
 
-  // MARK: - Error Types
-
   /// Errors that can occur during texture processing
   public enum Error: Swift.Error, CustomStringConvertible {
     /// Failed to convert NSImage to CGImage
@@ -53,8 +51,6 @@ public enum TextureProcessor {
     case both
   }
 
-  // MARK: - Cropping
-
   /// Crop an image to the specified rectangle
   /// - Parameters:
   ///   - image: Source image to crop
@@ -87,8 +83,6 @@ public enum TextureProcessor {
       size: NSSize(width: rect.width, height: rect.height)
     ))
   }
-
-  // MARK: - Rotation
 
   /// Rotate an image by the specified degrees
   /// - Parameters:
@@ -132,8 +126,6 @@ public enum TextureProcessor {
     newImage.unlockFocus()
     return .success(newImage)
   }
-
-  // MARK: - Flipping
 
   /// Flip an image horizontally
   /// - Parameter image: Source image to flip
@@ -199,8 +191,6 @@ public enum TextureProcessor {
     return .success(newImage)
   }
 
-  // MARK: - Transparency Detection
-
   /// Check if an image contains transparent pixels
   /// - Parameter image: Image to check
   /// - Returns: True if the image has an alpha channel with transparency
@@ -224,13 +214,13 @@ public enum TextureProcessor {
       return false
     }
     
-    // 快速检查：如果alphaInfo表明没有alpha通道，直接返回false
+    // Quick check: if alphaInfo indicates no alpha channel, return false immediately
     let alphaInfo = cgImage.alphaInfo
     if alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast {
       return false
     }
     
-    // 像素级检查：读取像素数据检查是否有透明像素
+    // Pixel-level check: read pixel data to check for transparent pixels
     let width = cgImage.width
     let height = cgImage.height
     
@@ -245,11 +235,11 @@ public enum TextureProcessor {
     let bytesPerPixel = cgImage.bitsPerPixel / 8
     let bytesPerRow = cgImage.bytesPerRow
     
-    // 检查每个像素的alpha值
+    // Check alpha value of each pixel
     for y in 0..<height {
       for x in 0..<width {
         let pixelIndex = y * bytesPerRow + x * bytesPerPixel
-        let alphaIndex = pixelIndex + (bytesPerPixel - 1) // alpha通常在最后一个字节
+        let alphaIndex = pixelIndex + (bytesPerPixel - 1) // alpha is usually the last byte
         
         if alphaIndex < CFDataGetLength(pixelData) {
           let alpha = data[alphaIndex]
@@ -262,8 +252,6 @@ public enum TextureProcessor {
     
     return false
   }
-
-  // MARK: - Combined Transforms
 
   /// Apply flip and rotation transforms for bottom face processing
   /// - Parameters:

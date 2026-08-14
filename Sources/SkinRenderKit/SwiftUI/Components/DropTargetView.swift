@@ -50,22 +50,3 @@ struct DropTargetView: View {
     .contentShape(RoundedRectangle(cornerRadius: 10))
   }
 }
-
-#Preview {
-  HStack {
-    DropTargetView(
-      title: "Skin (64x64)",
-      subtitle: "PNG / JPEG",
-      systemImage: "person.crop.square",
-      isActive: false
-    )
-
-    DropTargetView(
-      title: "Cape",
-      subtitle: "PNG / JPEG, 64x32",
-      systemImage: "flag.fill",
-      isActive: true
-    )
-  }
-  .padding()
-}

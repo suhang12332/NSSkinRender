@@ -13,51 +13,42 @@ internal import UniformTypeIdentifiers
 /// Provides a simple interface for displaying character models with drag-and-drop texture customization
 public struct SkinRenderView: View {
 
-  // MARK: - State
-
   @State private var texturePath: String?
   @State private var internalSkinImage: NSImage?
   
-  // 皮肤的外部绑定（可选）
+  // External binding for skin (optional)
   private var externalSkinImageBinding: Binding<NSImage?>?
   
-  // 皮肤路径的外部绑定（可选）
+  // External binding for skin path (optional)
   private var externalTexturePathBinding: Binding<String?>?
   
-  // 披风的外部绑定（必需，披风只支持 Binding）
+  // External binding for cape (required, cape only supports Binding)
   private var capeImageBinding: Binding<NSImage?>?
   
-  // 用于跟踪外部绑定变化的辅助状态
+  // Auxiliary state for tracking external binding changes
   @State private var externalCapeImageTracker: NSImage?
   
-  // 计算属性：皮肤的当前值
+  // Computed property: current skin value
   private var currentSkinImage: NSImage? {
     externalSkinImageBinding?.wrappedValue ?? internalSkinImage
   }
   
-  // 计算属性：皮肤路径的当前值
+  // Computed property: current texture path value
   private var currentTexturePath: String? {
     externalTexturePathBinding?.wrappedValue ?? texturePath
   }
   
-  // 计算属性：披风的当前值（只支持 Binding）
+  // Computed property: current cape value (Binding only)
   private var currentCapeImage: NSImage? {
     capeImageBinding?.wrappedValue
   }
-
-
-  // MARK: - Configuration
 
   let playerModel: PlayerModel
   let rotationDuration: TimeInterval
   let backgroundColor: NSColor
 
-  // MARK: - Callbacks
-
   public let onSkinDropped: ((NSImage) -> Void)?
   public let onCapeDropped: ((NSImage) -> Void)?
-
-  // MARK: - Initialization
 
   /// Initialize with texture path for skin (cape must use Binding)
   public init(
@@ -151,10 +142,8 @@ public struct SkinRenderView: View {
     self.onCapeDropped = onCapeDropped
   }
 
-  // MARK: - Body
-
   public var body: some View {
-    // 如果使用外部绑定，检查并同步 tracker（使用 let _ = 触发副作用）
+    // If using external binding, check and sync tracker
     let currentCapeImage = currentCapeImage
     let currentSkinImage = currentSkinImage
     let currentTexturePath = currentTexturePath
@@ -191,11 +180,9 @@ public struct SkinRenderView: View {
     ) { providers in
       handleDrop(providers: providers, target: .skin)
     }
-    // 不再依赖 renderKey / .id 强制重建 NSViewController，
-    // 让 SceneKitCharacterViewRepresentable 的 updateNSViewController 接管更新逻辑
+    // No longer relying on renderKey / .id to force NSViewController rebuild;
+    // let SceneKitCharacterViewRepresentable's updateNSViewController handle update logic
   }
-
-  // MARK: - Drop Handling
 
   private enum DropTarget {
     case skin, cape
@@ -229,10 +216,10 @@ public struct SkinRenderView: View {
   private func handleSkinDrop(_ image: NSImage) {
     switch ImageDropHandler.validateSkin(image) {
     case .valid(let validImage):
-      // 皮肤变化时更新状态，交由 SceneKitCharacterViewRepresentable 驱动局部刷新
+      // Update state on skin change, let SceneKitCharacterViewRepresentable drive partial refresh
       if let binding = externalSkinImageBinding {
         binding.wrappedValue = validImage
-        // 如果有路径绑定，清空它
+        // If there is a path binding, clear it
         externalTexturePathBinding?.wrappedValue = nil
       } else {
         internalSkinImage = validImage
@@ -249,7 +236,7 @@ public struct SkinRenderView: View {
   private func handleCapeDrop(_ image: NSImage) {
     switch ImageDropHandler.validateCape(image) {
     case .valid(let validImage):
-      // 披风变化时更新绑定（披风只支持 Binding），交由 SceneKitCharacterViewRepresentable 驱动局部刷新
+      // Update binding on cape change (cape only supports Binding), let SceneKitCharacterViewRepresentable drive partial refresh
       if let binding = capeImageBinding {
         binding.wrappedValue = validImage
         onCapeDropped?(validImage)
@@ -264,10 +251,8 @@ public struct SkinRenderView: View {
   }
 
   private func showDropError(_ message: String) {
-    // 调试日志已去掉，如需用户可见的提示可在此处添加 UI 呈现逻辑
+    // Debug log removed; add UI presentation logic here if user-visible alerts are needed
   }
-
-  // MARK: - File Import
 
   private func showFileImporter() {
     let panel = NSOpenPanel()
@@ -275,8 +260,8 @@ public struct SkinRenderView: View {
     panel.allowsMultipleSelection = false
     panel.canChooseDirectories = false
     panel.canChooseFiles = true
-    panel.prompt = "选择"
-    panel.message = "选择一个 Minecraft 皮肤纹理文件（64x64 或 64x32）"
+    panel.prompt = "Select"
+    panel.message = "Select a Minecraft skin texture file (64x64 or 64x32)"
 
     panel.begin { response in
       if response == .OK, let url = panel.url {
@@ -287,7 +272,7 @@ public struct SkinRenderView: View {
 
   private func loadSkinFromFile(at url: URL) {
     guard let image = NSImage(contentsOf: url) else {
-      showDropError("无法读取图片文件")
+      showDropError("Unable to read image file")
       return
     }
 

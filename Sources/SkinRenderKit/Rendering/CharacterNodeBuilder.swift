@@ -10,8 +10,6 @@ import SceneKit
 /// Builder responsible for creating the complete character node hierarchy
 public final class CharacterNodeBuilder {
 
-  // MARK: - Node References
-
   /// Container for all character node references
   public final class CharacterNodes {
     public let root: SCNNode
@@ -122,22 +120,16 @@ public final class CharacterNodeBuilder {
     }
   }
 
-  // MARK: - Dependencies
-
   let materialFactory: CharacterMaterialFactory
   let voxelBuilder: VoxelOuterLayerBuilder
-
-  // MARK: - Initialization
 
   public init(materialFactory: CharacterMaterialFactory) {
     self.materialFactory = materialFactory
     
-    // 共享materialFactory的textureCache，避免重复缓存
-    // 这样materialFactory和voxelBuilder可以共享同一个缓存实例
+    // Share materialFactory's textureCache to avoid duplicate caching
+    // This way materialFactory and voxelBuilder can share the same cache instance
     self.voxelBuilder = VoxelOuterLayerBuilder(textureCache: materialFactory.textureCache)
   }
-
-  // MARK: - Build Character
 
   /// Build the complete character node hierarchy
   /// - Parameters:
@@ -154,10 +146,10 @@ public final class CharacterNodeBuilder {
   ) -> CharacterNodes {
     let root = SCNNode()
     root.name = "CharacterGroup"
-    // 全局缩放，让模型整体小一点
+    // Global scale to make the model smaller overall
     let s = CharacterDimensions.globalScale
     root.scale = SCNVector3(s, s, s)
-    // 上移模型位置
+    // Move model position up
     root.position.y = CharacterDimensions.globalYOffset
 
     // Build all body parts
