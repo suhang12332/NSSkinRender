@@ -95,8 +95,4 @@ public final class TextureCache {
     cropCache.removeAll()
   }
   
-  /// Get current cache size
-  public var cacheSize: Int {
-    cropCache.count
-  }
 }

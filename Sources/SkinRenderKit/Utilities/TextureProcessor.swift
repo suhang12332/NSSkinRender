@@ -205,54 +205,6 @@ public enum TextureProcessor {
       && alphaInfo != .noneSkipLast
   }
   
-  /// Check if an image contains transparent pixels (with pixel-level check)
-  /// This is more accurate but slower than hasTransparentPixels
-  /// - Parameter image: Image to check
-  /// - Returns: True if any pixel has alpha < 255
-  public static func hasTransparentPixelsDetailed(_ image: NSImage) -> Bool {
-    guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-      return false
-    }
-    
-    // Quick check: if alphaInfo indicates no alpha channel, return false immediately
-    let alphaInfo = cgImage.alphaInfo
-    if alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast {
-      return false
-    }
-    
-    // Pixel-level check: read pixel data to check for transparent pixels
-    let width = cgImage.width
-    let height = cgImage.height
-    
-    guard let dataProvider = cgImage.dataProvider,
-          let pixelData = dataProvider.data else {
-      return false
-    }
-    
-    let data = CFDataGetBytePtr(pixelData)
-    guard let data = data else { return false }
-    
-    let bytesPerPixel = cgImage.bitsPerPixel / 8
-    let bytesPerRow = cgImage.bytesPerRow
-    
-    // Check alpha value of each pixel
-    for y in 0..<height {
-      for x in 0..<width {
-        let pixelIndex = y * bytesPerRow + x * bytesPerPixel
-        let alphaIndex = pixelIndex + (bytesPerPixel - 1) // alpha is usually the last byte
-        
-        if alphaIndex < CFDataGetLength(pixelData) {
-          let alpha = data[alphaIndex]
-          if alpha < 255 {
-            return true
-          }
-        }
-      }
-    }
-    
-    return false
-  }
-
   /// Apply flip and rotation transforms for bottom face processing
   /// - Parameters:
   ///   - image: Source image

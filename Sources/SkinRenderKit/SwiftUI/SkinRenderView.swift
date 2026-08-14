@@ -7,7 +7,7 @@
 
 import SwiftUI
 import AppKit
-internal import UniformTypeIdentifiers
+import UniformTypeIdentifiers
 
 /// Main SwiftUI View for rendering Minecraft character skins
 /// Provides a simple interface for displaying character models with drag-and-drop texture customization

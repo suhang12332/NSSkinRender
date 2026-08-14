@@ -114,10 +114,6 @@ public final class CharacterNodeBuilder {
       capePivot?.isHidden = hidden
     }
 
-    /// Toggle elytra visibility
-    public func setElytraHidden(_ hidden: Bool) {
-      elytraPivot?.isHidden = hidden
-    }
   }
 
   let materialFactory: CharacterMaterialFactory

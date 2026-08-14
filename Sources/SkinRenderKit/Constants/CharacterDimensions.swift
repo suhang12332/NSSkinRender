@@ -58,27 +58,6 @@ public enum CharacterDimensions {
   /// Leg depth (4 pixels)
   public static let legDepth: CGFloat = 4
 
-  /// Leg sleeve overlay width
-  public static let legSleeveWidth: CGFloat = 4.5
-
-  /// Leg sleeve overlay height
-  public static let legSleeveHeight: CGFloat = 12.5
-
-  /// Leg sleeve overlay depth
-  public static let legSleeveDepth: CGFloat = 4.5
-
-  /// Right leg X position
-  public static let rightLegX: CGFloat = -2
-
-  /// Left leg X position
-  public static let leftLegX: CGFloat = 2
-
-  /// Leg Y offset from group pivot
-  public static let legYOffset: CGFloat = -6
-
-  /// Leg sleeve Y offset from group pivot
-  public static let legSleeveYOffset: CGFloat = -6.25
-
   /// Cape width (10 pixels)
   public static let capeWidth: CGFloat = 10
 
@@ -135,20 +114,8 @@ public enum CharacterDimensions {
 
   /// Rendering order priorities for Z-fighting prevention
   public enum RenderingOrder {
-    /// Base body parts (lowest)
-    public static let baseBody: Int = 100
-
-    /// Base limbs (slightly higher than body)
-    public static let baseLimbs: Int = 105
-
-    /// Cape (between base and outer)
-    public static let cape: Int = 150
-
     /// Outer overlay layers
     public static let outerLayers: Int = 200
-
-    /// Outer limb overlays (highest)
-    public static let outerLimbs: Int = 210
   }
 
   /// Animation configuration constants
@@ -176,17 +143,5 @@ public enum CharacterDimensions {
 
     /// Cape side sway angle
     public static let capeSideSwayAngle: Float = .pi / 40
-  }
-
-  /// Lighting configuration constants
-  public enum Lighting {
-    /// Ambient light intensity
-    public static let ambientIntensity: CGFloat = 300
-
-    /// Directional light intensity
-    public static let directionalIntensity: CGFloat = 500
-
-    /// Directional light euler angles
-    public static let directionalAngles = SCNVector3(-Float.pi / 4, Float.pi / 4, 0)
   }
 }

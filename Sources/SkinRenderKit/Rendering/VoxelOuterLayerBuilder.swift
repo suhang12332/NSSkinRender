@@ -177,8 +177,7 @@ final class VoxelOuterLayerBuilder {
       // If format doesn't match, use CGContext to convert
       let data: UnsafePointer<UInt8>
       let bytesPerRow: Int
-      let shouldFreeData: Bool
-      
+
       // Use CGContext to read pixel data
       guard let context = CGContext(
         data: nil,
@@ -200,7 +199,6 @@ final class VoxelOuterLayerBuilder {
       let mutablePointer = pixelData.assumingMemoryBound(to: UInt8.self)
       data = UnsafePointer(mutablePointer)
       bytesPerRow = width * 4
-      shouldFreeData = false  // CGContext manages memory
 
       // Pre-calculate parameters for this face
       let faceSizeDifference = faceSizeDifferences[faceIndex]
@@ -300,7 +298,7 @@ final class VoxelOuterLayerBuilder {
       let segmentsByColor = Dictionary(grouping: allSegments) { $0.segment.colorKey }
       
       // Batch create nodes for each color group
-      for (colorKey, colorSegments) in segmentsByColor {
+      for (_, colorSegments) in segmentsByColor {
         // Get material (use first segment's RGB values since same-group colors are identical)
         let firstSegment = colorSegments[0].segment
         let material = getOrCreateMaterial(
@@ -311,7 +309,7 @@ final class VoxelOuterLayerBuilder {
         )
         
         // Create nodes for each segment (use cached material)
-        for (segment, position, mergedWidth) in colorSegments {
+        for (_, position, mergedWidth) in colorSegments {
           let voxelNode = createMergedVoxelNode(
             material: material,
             position: position,
@@ -326,21 +324,6 @@ final class VoxelOuterLayerBuilder {
     }
   }
 
-  /// Get or create material (from NSColor, kept for compatibility)
-  private func getOrCreateMaterial(for color: NSColor) -> SCNMaterial {
-    let rgbKey = colorToRGBKey(color)
-    
-    if let cachedMaterial = materialCache[rgbKey] {
-      return cachedMaterial
-    }
-    
-    let material = SCNMaterial()
-    configureBaseMaterialProperties(material, color: color)
-    materialCache[rgbKey] = material
-    
-    return material
-  }
-  
   /// Phase 3 optimization: Get or create material directly from RGB values (avoid unnecessary NSColor object creation)
   private func getOrCreateMaterial(r: UInt8, g: UInt8, b: UInt8, a: UInt8) -> SCNMaterial {
     let rgbKey = rgbToColorKey(r: r, g: g, b: b)
@@ -362,14 +345,6 @@ final class VoxelOuterLayerBuilder {
     materialCache[rgbKey] = material
     
     return material
-  }
-  
-  /// Create RGB key from NSColor (kept for compatibility)
-  private func colorToRGBKey(_ color: NSColor) -> UInt32 {
-    let r = UInt32(min(255, max(0, Int(color.redComponent * 255.0))))
-    let g = UInt32(min(255, max(0, Int(color.greenComponent * 255.0))))
-    let b = UInt32(min(255, max(0, Int(color.blueComponent * 255.0))))
-    return (r << 24) | (g << 16) | (b << 8)
   }
   
   /// 第三阶段优化：直接从RGB值创建颜色键（避免NSColor对象创建）
@@ -400,16 +375,6 @@ final class VoxelOuterLayerBuilder {
     let a: UInt8       // Alpha分量 (0-255)
     let row: Int
     let colorKey: UInt32  // 缓存的颜色键，用于快速比较
-    
-    /// 延迟创建NSColor对象（仅在需要时创建，如创建材质时）
-    var color: NSColor {
-      NSColor(
-        red: CGFloat(r) / 255.0,
-        green: CGFloat(g) / 255.0,
-        blue: CGFloat(b) / 255.0,
-        alpha: CGFloat(a) / 255.0
-      )
-    }
   }
   
   /// 处理一行的像素，合并连续相同颜色的像素段
@@ -534,23 +499,6 @@ final class VoxelOuterLayerBuilder {
     material.lightingModel = .lambert
   }
 
-  private func createVoxelNode(
-    color: NSColor,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    return createMergedVoxelNode(
-      color: color,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: voxelSize,  // 默认单个像素宽度
-      thickness: thickness
-    )
-  }
-  
   /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
   /// 第四阶段优化：接受预创建的材质，避免重复创建
   /// - Parameters:
@@ -589,76 +537,5 @@ final class VoxelOuterLayerBuilder {
     let node = SCNNode(geometry: voxelGeometry)
     node.position = position
     return node
-  }
-  
-  /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
-  /// 第三阶段优化：直接从RGB值创建，避免NSColor对象创建
-  /// - Parameters:
-  ///   - r: 红色分量 (0-255)
-  ///   - g: 绿色分量 (0-255)
-  ///   - b: 蓝色分量 (0-255)
-  ///   - a: Alpha分量 (0-255)
-  ///   - position: 体素位置（中心点）
-  ///   - faceIndex: 面索引
-  ///   - voxelSize: 基础体素大小
-  ///   - mergedWidth: 合并后的宽度（可以是多个像素的宽度）
-  ///   - thickness: 体素厚度
-  /// - Returns: 合并后的体素节点
-  private func createMergedVoxelNode(
-    r: UInt8,
-    g: UInt8,
-    b: UInt8,
-    a: UInt8,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    mergedWidth: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    // 第三阶段优化：直接使用RGB值创建材质，避免不必要的NSColor对象创建
-    let material = getOrCreateMaterial(r: r, g: g, b: b, a: a)
-    return createMergedVoxelNode(
-      material: material,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: mergedWidth,
-      thickness: thickness
-    )
-  }
-  
-  /// 创建合并的体素节点（从NSColor，保留用于兼容性）
-  /// - Parameters:
-  ///   - color: 体素颜色
-  ///   - position: 体素位置（中心点）
-  ///   - faceIndex: 面索引
-  ///   - voxelSize: 基础体素大小
-  ///   - mergedWidth: 合并后的宽度（可以是多个像素的宽度）
-  ///   - thickness: 体素厚度
-  /// - Returns: 合并后的体素节点
-  private func createMergedVoxelNode(
-    color: NSColor,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    mergedWidth: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    let r = UInt8(min(255, max(0, Int(color.redComponent * 255.0))))
-    let g = UInt8(min(255, max(0, Int(color.greenComponent * 255.0))))
-    let b = UInt8(min(255, max(0, Int(color.blueComponent * 255.0))))
-    let a = UInt8(min(255, max(0, Int(color.alphaComponent * 255.0))))
-    
-    return createMergedVoxelNode(
-      r: r,
-      g: g,
-      b: b,
-      a: a,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: mergedWidth,
-      thickness: thickness
-    )
   }
 }

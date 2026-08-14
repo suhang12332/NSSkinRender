@@ -6,7 +6,7 @@
 //
 
 import AppKit
-internal import UniformTypeIdentifiers
+import UniformTypeIdentifiers
 
 /// Handler for loading and validating dropped images
 public enum ImageDropHandler {

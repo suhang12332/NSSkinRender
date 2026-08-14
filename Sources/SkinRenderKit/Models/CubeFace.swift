@@ -3,7 +3,6 @@
 //  SkinRenderKit
 //
 
-import Foundation
 import CoreGraphics
 
 // swiftlint:disable comma colon

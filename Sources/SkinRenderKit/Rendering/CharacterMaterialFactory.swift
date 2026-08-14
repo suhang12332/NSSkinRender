@@ -371,12 +371,6 @@ public final class CharacterMaterialFactory {
     material.specular.contents = specular
   }
 
-  /// Configure Lambert lighting model
-  /// - Parameter material: The material to configure
-  private func configureLambertLighting(_ material: SCNMaterial) {
-    material.lightingModel = .lambert
-  }
-
   /// Configure transparency and blending for materials
   /// - Parameters:
   ///   - material: The material to configure

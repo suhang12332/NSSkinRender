@@ -103,11 +103,6 @@ extension SceneKitCharacterViewController {
   }
 }
 
-extension SceneKitCharacterViewController {
-  /// Legacy enum for backward compatibility
-  public typealias LimbBottomFlipMode = TextureProcessor.FlipMode
-}
-
 #Preview {
   SceneKitCharacterViewController(rotationDuration: 12)
 }
