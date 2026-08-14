@@ -16,8 +16,6 @@ struct BodyNodes {
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Body
-
   func buildBody(
     skinImage: NSImage,
     parent: SCNNode

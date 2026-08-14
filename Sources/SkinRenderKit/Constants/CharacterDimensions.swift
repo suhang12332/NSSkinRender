@@ -11,8 +11,6 @@ import SceneKit
 /// Minecraft character geometry constants
 public enum CharacterDimensions {
 
-  // MARK: - Head
-
   /// Base head size (8x8x8 pixels)
   public static let headSize: CGFloat = 8
 
@@ -22,17 +20,13 @@ public enum CharacterDimensions {
   /// Head center Y position
   public static let headY: CGFloat = 16
 
-  // MARK: - Global Scale
-
   /// Global character scale factor (1.0 = original size)
-  /// 调小一点让模型在画面中显得更小
+  /// Reduce to make the model appear smaller on screen
   public static let globalScale: CGFloat = 0.8
 
   /// Global Y position offset for the character root node
-  /// 上移模型位置
+  /// Move model position up
   public static let globalYOffset: CGFloat = 3.0
-
-  // MARK: - Body
 
   /// Body width (8 pixels)
   public static let bodyWidth: CGFloat = 8
@@ -55,8 +49,6 @@ public enum CharacterDimensions {
   /// Jacket overlay depth (thickness 0.125)
   public static let jacketDepth: CGFloat = 4.125
 
-  // MARK: - Legs
-
   /// Leg width (4 pixels)
   public static let legWidth: CGFloat = 4
 
@@ -65,29 +57,6 @@ public enum CharacterDimensions {
 
   /// Leg depth (4 pixels)
   public static let legDepth: CGFloat = 4
-
-  /// Leg sleeve overlay width
-  public static let legSleeveWidth: CGFloat = 4.5
-
-  /// Leg sleeve overlay height
-  public static let legSleeveHeight: CGFloat = 12.5
-
-  /// Leg sleeve overlay depth
-  public static let legSleeveDepth: CGFloat = 4.5
-
-  /// Right leg X position
-  public static let rightLegX: CGFloat = -2
-
-  /// Left leg X position
-  public static let leftLegX: CGFloat = 2
-
-  /// Leg Y offset from group pivot
-  public static let legYOffset: CGFloat = -6
-
-  /// Leg sleeve Y offset from group pivot
-  public static let legSleeveYOffset: CGFloat = -6.25
-
-  // MARK: - Cape
 
   /// Cape width (10 pixels)
   public static let capeWidth: CGFloat = 10
@@ -109,8 +78,6 @@ public enum CharacterDimensions {
 
   /// Cape base backward tilt angle (~12.8°)
   public static let capeBaseAngle: Float = .pi / 14
-
-  // MARK: - Elytra
 
   /// Elytra wing width (10 pixels)
   public static let elytraWingWidth: CGFloat = 10
@@ -139,35 +106,17 @@ public enum CharacterDimensions {
   /// Elytra backward tilt angle for natural appearance
   public static let elytraTiltAngle: Float = .pi / 12  // ~15°
 
-  // MARK: - Camera
-
   /// Default camera position
   public static let cameraPosition = SCNVector3(0, 6, 35)
 
   /// Default camera look-at target
   public static let cameraTarget = SCNVector3(0, 6, 0)
 
-  // MARK: - Rendering Order
-
   /// Rendering order priorities for Z-fighting prevention
   public enum RenderingOrder {
-    /// Base body parts (lowest)
-    public static let baseBody: Int = 100
-
-    /// Base limbs (slightly higher than body)
-    public static let baseLimbs: Int = 105
-
-    /// Cape (between base and outer)
-    public static let cape: Int = 150
-
     /// Outer overlay layers
     public static let outerLayers: Int = 200
-
-    /// Outer limb overlays (highest)
-    public static let outerLimbs: Int = 210
   }
-
-  // MARK: - Animation
 
   /// Animation configuration constants
   public enum Animation {
@@ -194,19 +143,5 @@ public enum CharacterDimensions {
 
     /// Cape side sway angle
     public static let capeSideSwayAngle: Float = .pi / 40
-  }
-
-  // MARK: - Lighting
-
-  /// Lighting configuration constants
-  public enum Lighting {
-    /// Ambient light intensity
-    public static let ambientIntensity: CGFloat = 300
-
-    /// Directional light intensity
-    public static let directionalIntensity: CGFloat = 500
-
-    /// Directional light euler angles
-    public static let directionalAngles = SCNVector3(-Float.pi / 4, Float.pi / 4, 0)
   }
 }

@@ -10,8 +10,6 @@ import SceneKit
 /// Factory responsible for creating SCNMaterial arrays for character body parts
 public final class CharacterMaterialFactory {
 
-  // MARK: - Configuration
-
   /// Configuration for bottom face texture transformations
   public struct BottomFaceConfig {
     public var limbFlipMode: TextureProcessor.FlipMode
@@ -35,17 +33,15 @@ public final class CharacterMaterialFactory {
   /// Configuration for bottom face transforms
   public var bottomFaceConfig: BottomFaceConfig
   
-  /// 纹理缓存：用于缓存裁剪结果和透明度检测
-  /// 内部访问，允许CharacterNodeBuilder共享同一个缓存实例
+  /// Texture cache: Used to cache crop results and transparency detection
+  /// Internal access, allows CharacterNodeBuilder to share the same cache instance
   internal let textureCache: TextureCache
   
-  /// 预创建的Phong光照配置（避免重复创建NSColor对象）
+  /// Pre-created Phong lighting configuration (avoids recreating NSColor objects)
   private let basePhongAmbient = NSColor.white.withAlphaComponent(0.15)
   private let basePhongSpecular = NSColor.white.withAlphaComponent(0.2)
   private let outerPhongAmbient = NSColor.black.withAlphaComponent(0.2)
   private let outerPhongSpecular = NSColor.white.withAlphaComponent(0.1)
-
-  // MARK: - Initialization
 
   public init(
     bottomFaceConfig: BottomFaceConfig = BottomFaceConfig(),
@@ -54,8 +50,6 @@ public final class CharacterMaterialFactory {
     self.bottomFaceConfig = bottomFaceConfig
     self.textureCache = textureCache ?? TextureCache()
   }
-
-  // MARK: - Head Materials
 
   /// Create materials for the head (base or hat overlay)
   /// - Parameters:
@@ -73,8 +67,6 @@ public final class CharacterMaterialFactory {
     )
   }
 
-  // MARK: - Body Materials
-
   /// Create materials for the body (base or jacket overlay)
   /// - Parameters:
   ///   - skinImage: The skin texture image
@@ -90,8 +82,6 @@ public final class CharacterMaterialFactory {
       isLimb: false
     )
   }
-
-  // MARK: - Arm Materials
 
   /// Create materials for an arm (base or sleeve overlay)
   /// - Parameters:
@@ -127,8 +117,6 @@ public final class CharacterMaterialFactory {
     )
   }
 
-  // MARK: - Leg Materials
-
   /// Create materials for a leg (base or sleeve overlay)
   /// - Parameters:
   ///   - skinImage: The skin texture image
@@ -160,19 +148,17 @@ public final class CharacterMaterialFactory {
     )
   }
 
-  // MARK: - Cape Materials
-
   /// Create materials for the cape
   /// - Parameter capeImage: The cape texture image
   /// - Returns: Array of 6 materials for each cube face
   public func createCapeMaterials(from capeImage: NSImage) -> [SCNMaterial] {
     var materials: [SCNMaterial] = []
-    materials.reserveCapacity(6)  // 预分配容量
+    materials.reserveCapacity(6)  // Pre-allocate capacity
 
     for spec in CubeFace.cape {
       let material = SCNMaterial()
 
-      // 优化：使用纹理缓存获取裁剪结果和透明度信息
+      // Optimization: Use texture cache to get crop results and transparency info
       let cropResult = textureCache.getOrCrop(
         image: capeImage,
         rect: spec.rect
@@ -191,7 +177,7 @@ public final class CharacterMaterialFactory {
 
         configureBaseMaterialProperties(material, image: finalImage)
         configureTransparency(material, transparency: 1.0, isDoubleSided: true)
-        // 优化：使用预创建的NSColor对象
+        // Optimization: Use pre-created NSColor objects
         configurePhongLighting(
           material,
           shininess: 0.1,
@@ -212,8 +198,6 @@ public final class CharacterMaterialFactory {
     return materials
   }
 
-  // MARK: - Generic Material Creation
-
   /// Create materials from texture specifications
   /// - Parameters:
   ///   - skinImage: The source texture image
@@ -229,22 +213,22 @@ public final class CharacterMaterialFactory {
     isOuter: Bool,
     isLimb: Bool
   ) -> [SCNMaterial] {
-    // 预分配容量，避免数组重新分配
+    // Pre-allocate capacity to avoid array reallocation
     var materials: [SCNMaterial] = []
     materials.reserveCapacity(6)
 
     for (index, spec) in specs.enumerated() {
       let material = SCNMaterial()
 
-      // 优化：使用纹理缓存获取裁剪结果和透明度信息
-      // 注意：bottom face需要变换，变换后的图像不会被缓存（或需要特殊处理）
+      // Optimization: Use texture cache to get crop results and transparency info
+      // Note: bottom face needs transform, transformed image won't be cached (or needs special handling)
       let needsTransform = index == 5  // bottom face
       
       let finalImage: NSImage
       let hasTransparency: Bool
       
       if needsTransform {
-        // bottom face需要变换，先获取裁剪结果
+        // Bottom face needs transform, get crop result first
         let cropResult = textureCache.getOrCrop(
           image: skinImage,
           rect: spec.rect
@@ -260,7 +244,7 @@ public final class CharacterMaterialFactory {
           continue
         }
         
-        // 应用变换（变换后的图像不使用缓存）
+        // Apply transform (transformed image doesn't use cache)
         let transformResult: Result<NSImage, TextureProcessor.Error>
         if isLimb {
           transformResult = TextureProcessor.applyBottomFaceTransform(
@@ -276,10 +260,10 @@ public final class CharacterMaterialFactory {
           )
         }
         finalImage = (try? transformResult.get()) ?? croppedImage
-        // 变换后需要重新检测透明度
+        // After transform, need to re-detect transparency
         hasTransparency = TextureProcessor.hasTransparentPixels(finalImage)
       } else {
-        // 其他面直接使用缓存的结果（包括透明度信息）
+        // Other faces directly use cached results (including transparency info)
         let cropResult = textureCache.getOrCrop(
           image: skinImage,
           rect: spec.rect
@@ -311,7 +295,7 @@ public final class CharacterMaterialFactory {
       }
 
       // Use Phong lighting model for enhanced depth and material quality
-      // 优化：使用预创建的NSColor对象，避免重复创建
+      // Optimization: Use pre-created NSColor objects, avoid recreating
       configurePhongLighting(
         material,
         shininess: 0.15,
@@ -324,8 +308,6 @@ public final class CharacterMaterialFactory {
 
     return materials
   }
-
-  // MARK: - Elytra Materials
 
   /// Create material for elytra wing (plane-based rendering)
   /// - Parameters:
@@ -341,7 +323,7 @@ public final class CharacterMaterialFactory {
     case .success(let croppedImage):
       configureBaseMaterialProperties(material, image: croppedImage)
       configureTransparency(material, transparency: 1.0, isDoubleSided: true)
-      // 优化：使用预创建的NSColor对象
+      // Optimization: Use pre-created NSColor objects
       configurePhongLighting(
         material,
         shininess: 0.2,
@@ -358,8 +340,6 @@ public final class CharacterMaterialFactory {
 
     return material
   }
-
-  // MARK: - Material Configuration Helpers
 
   /// Configure base material properties for texture rendering
   /// - Parameters:
@@ -389,12 +369,6 @@ public final class CharacterMaterialFactory {
     material.shininess = shininess
     material.ambient.contents = ambient
     material.specular.contents = specular
-  }
-
-  /// Configure Lambert lighting model
-  /// - Parameter material: The material to configure
-  private func configureLambertLighting(_ material: SCNMaterial) {
-    material.lightingModel = .lambert
   }
 
   /// Configure transparency and blending for materials

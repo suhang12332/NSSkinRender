@@ -7,8 +7,6 @@ import SceneKit
 
 extension SceneKitCharacterViewController {
 
-  // MARK: - Internal Update Helpers
-
   private func applySkinUpdate(path: String? = nil, image: NSImage? = nil) {
     if let path = path {
       // Skip if path unchanged
@@ -22,7 +20,7 @@ extension SceneKitCharacterViewController {
     }
 
     if let image = image {
-      // 不再仅通过实例相等性短路；允许外部复用同一个 NSImage 实例但更新其内容
+      // No longer short-circuit only through instance equality; allow external code to reuse the same NSImage instance but update its content
       self.skinImage = image
       self.skinTexturePath = nil
       updateSkinGeometry()
@@ -31,13 +29,13 @@ extension SceneKitCharacterViewController {
 
   private func applyCapeUpdate(path: String? = nil, image: NSImage? = nil) {
     if let path = path {
-      // path 未变化则直接返回，避免无效刷新
+      // Return directly if path unchanged to avoid invalid refresh
       guard capeTexturePath != path else {
         return
       }
       self.capeTexturePath = path
       loadCapeTexture(from: path)
-      // 只在成功加载到图片时更新披风几何
+      // Update cape geometry only when image is successfully loaded
       if capeImage != nil {
         updateCapeGeometry()
       }
@@ -45,14 +43,12 @@ extension SceneKitCharacterViewController {
     }
 
     if let image = image {
-      // 允许同一实例重复传入，以支持外部对 NSImage 内容的就地修改
+      // Allow the same instance to be passed again to support in-place modification of NSImage content
       self.capeImage = image
       self.capeTexturePath = nil
       updateCapeGeometry()
     }
   }
-
-  // MARK: - Public Update Methods
 
   public func updateTexture(path: String) {
     applySkinUpdate(path: path)
@@ -116,9 +112,7 @@ extension SceneKitCharacterViewController {
     animationController.toggleCapeAnimation(enabled)
   }
 
-  // MARK: - Cape Geometry Helpers
-
-  /// 根据当前 `capeImage` 更新或创建披风几何，而不重建整个人物
+  /// Update or create cape geometry based on current `capeImage` without rebuilding the entire character
   private func updateCapeGeometry() {
     guard let nodes = characterNodes else {
       return
@@ -128,7 +122,7 @@ extension SceneKitCharacterViewController {
     }
 
     if let capeNode = nodes.cape, let geometry = capeNode.geometry {
-      // 清理旧材质
+      // Clean up old materials
       for material in geometry.materials {
         material.diffuse.contents = nil
         material.ambient.contents = nil
@@ -139,12 +133,12 @@ extension SceneKitCharacterViewController {
       let capeNodes = nodeBuilder.buildCape(capeImage: image, parent: nodes.root)
       nodes.setCape(pivot: capeNodes.pivot, cape: capeNodes.cape)
       nodes.setCapeHidden(!showCape)
-      // 如果披风动画已开启，重新刷新一次动画
+      // If cape animation is enabled, refresh the animation once
       animationController.refreshCapeSwayAnimation()
     }
   }
 
-  /// 移除披风几何而不重建整个人物
+  /// Remove cape geometry without rebuilding the entire character
   private func removeCapeGeometry() {
     guard let nodes = characterNodes else {
       return
@@ -155,14 +149,12 @@ extension SceneKitCharacterViewController {
       pivot.removeFromParentNode()
     }
 
-    // 清空节点引用，防止动画控制器继续持有旧节点
+    // Clear node references to prevent animation controller from holding old nodes
     nodes.clearCape()
     animationController.toggleCapeAnimation(false)
   }
 
-  // MARK: - Skin Geometry Helpers
-
-  /// 根据当前 `skinImage` 只刷新材质，而不重建整个人物节点
+  /// Only refresh materials based on current `skinImage` without rebuilding the entire character node
   private func updateSkinGeometry() {
     guard let nodes = characterNodes else {
       return
@@ -171,13 +163,13 @@ extension SceneKitCharacterViewController {
       return
     }
     
-    // 清空纹理缓存，避免使用旧皮肤的缓存结果
-    // 这确保了每次皮肤更新时都使用新的裁剪结果
+    // Clear texture cache to avoid using old skin cache results
+    // This ensures new crop results are used each time the skin updates
     materialFactory.textureCache.clear()
 
-    // 1. 基础几何（SCNBox）清理旧材质后重生成材质
+    // 1. Base geometry (SCNBox) clean up old materials then regenerate materials
     if let headGeometry = nodes.head.geometry {
-      // 清理旧材质
+      // Clean up old materials
       for material in headGeometry.materials {
         material.diffuse.contents = nil
         material.ambient.contents = nil
@@ -246,7 +238,7 @@ extension SceneKitCharacterViewController {
       )
     }
 
-    // 2. 外层体素（Hat / Jacket / Sleeves）完全根据新皮肤贴图重建
+    // 2. Outer layer voxels (Hat / Jacket / Sleeves) completely rebuilt based on new skin texture
     nodeBuilder.rebuildOuterLayerVoxels(
       nodes,
       skinImage: image,

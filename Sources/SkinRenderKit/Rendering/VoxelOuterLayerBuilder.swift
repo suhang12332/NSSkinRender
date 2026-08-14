@@ -3,21 +3,21 @@
 //  SkinRenderKit
 //
 //  Builds voxel-based overlay layers (hat, jacket, sleeves) from Minecraft skin textures.
-//  优化版本：使用配置结构体、强制baseSize、批量处理优化
+//  Optimized version: Use configuration struct, enforce baseSize, batch processing optimization
 //
 
 import AppKit
 import SceneKit
 
-/// 体素覆盖层配置参数
+/// Voxel overlay configuration parameters
 struct VoxelOverlayConfig {
-  /// 外层尺寸
+  /// Outer layer size
   let boxSize: SCNVector3
-  /// 基础层尺寸（必须提供，不再可选）
+  /// Base layer size (must be provided, no longer optional)
   let baseSize: SCNVector3
-  /// 体素大小，默认1.0
+  /// Voxel size, default 1.0
   let voxelSize: CGFloat
-  /// 体素厚度，如果为nil则使用尺寸差异
+  /// Voxel thickness, if nil use size difference
   let voxelThickness: CGFloat?
   
   init(
@@ -37,35 +37,31 @@ struct VoxelOverlayConfig {
 /// from a Minecraft skin texture. Each visible pixel on the specified cube faces is
 /// represented as a tiny SCNBox ("voxel") to give the outer layer extra depth.
 ///
-/// 优化版本：
-/// - 使用配置结构体简化接口
-/// - 强制要求baseSize，简化逻辑
-/// - 材质缓存优化
-/// - 批量处理优化
-/// - 纹理裁剪缓存
-/// - CGContext复用
-/// - 第二阶段优化：行内体素合并（减少节点数量）
+/// Optimized version:
+/// - Use configuration struct to simplify interface
+/// - Enforce baseSize, simplify logic
+/// - Material cache optimization
+/// - Batch processing optimization
+/// - Texture crop cache
+/// - CGContext reuse
+/// - Phase 2 optimization: Inline voxel merging (reduce node count)
 final class VoxelOuterLayerBuilder {
   
   // MARK: - Caches
   
-  /// 材质缓存：使用颜色的RGB值作为键来复用材质
+  /// Material cache: Use color RGB values as keys to reuse materials
   private var materialCache: [UInt32: SCNMaterial] = [:]
   
-  /// 纹理缓存：用于缓存裁剪结果
+  /// Texture cache: Used to cache crop results
   private let textureCache: TextureCache
   
-  // 注意：CGContext 不能真正复用，因为其 data 是只读的
-  // 每次使用都需要创建新的 context，所以移除了 context 缓存
-  // 性能影响很小，因为 context 创建开销不大
+  // Note: CGContext cannot be truly reused because its data is read-only
+  // Need to create new context each time, so removed context caching
+  // Performance impact is small because context creation overhead is minimal
 
-  // MARK: - Initialization
-  
   init(textureCache: TextureCache? = nil) {
     self.textureCache = textureCache ?? TextureCache()
   }
-
-  // MARK: - Public API
 
   /// Build a voxel-based overlay node from the given skin texture and face specs.
   ///
@@ -73,7 +69,7 @@ final class VoxelOuterLayerBuilder {
   ///   - skinImage: The full Minecraft skin texture image.
   ///   - specs: Face specifications (front/right/back/left/top/bottom) defining
   ///            the crop rectangles on the skin texture.
-  ///   - config: 体素覆盖层配置参数
+  ///   - config: Voxel overlay configuration parameters
   ///   - position: Position of the overlay node relative to its parent/group.
   ///   - name: Name to assign to the overlay node (for debugging).
   ///
@@ -106,7 +102,7 @@ final class VoxelOuterLayerBuilder {
   ///   - containerNode: Existing overlay container node whose children will be replaced.
   ///   - skinImage: The new Minecraft skin texture image.
   ///   - specs: Face specifications defining crop rectangles.
-  ///   - config: 体素覆盖层配置参数
+  ///   - config: Voxel overlay configuration parameters
   func rebuildVoxelOverlay(
     in containerNode: SCNNode,
     from skinImage: NSImage,
@@ -134,8 +130,6 @@ final class VoxelOuterLayerBuilder {
     )
   }
 
-  // MARK: - Voxel Population Core
-
   /// Core implementation that fills a container node with voxel children
   private func populateVoxelOverlay(
     in containerNode: SCNNode,
@@ -143,33 +137,33 @@ final class VoxelOuterLayerBuilder {
     specs: [CubeFace.Spec],
     config: VoxelOverlayConfig
   ) {
-    // 计算尺寸差异（baseSize现在是必须的，不再需要默认值）
+    // Calculate size difference (baseSize is now required, no default needed)
     let diffX = CGFloat(config.boxSize.x) - CGFloat(config.baseSize.x)
     let diffY = CGFloat(config.boxSize.y) - CGFloat(config.baseSize.y)
     let diffZ = CGFloat(config.boxSize.z) - CGFloat(config.baseSize.z)
     
-    // 每个面的具体差异：[front, right, back, left, top, bottom]
+    // Per-face size differences: [front, right, back, left, top, bottom]
     let faceSizeDifferences: [CGFloat] = [diffZ, diffX, diffZ, diffX, diffY, diffY]
     
-    // 计算每个面的厚度
+    // Calculate per-face thickness
     let faceThicknesses: [CGFloat] = if let customThickness = config.voxelThickness {
       Array(repeating: customThickness, count: 6)
     } else {
       faceSizeDifferences
     }
     
-    // 预先计算半厚度值
+    // Pre-calculate half thickness values
     let halfThicknesses = faceThicknesses.map { $0 / 2.0 }
     
-    // 共享的CGContext配置
+    // Shared CGContext configuration
     let colorSpace = CGColorSpaceCreateDeviceRGB()
     let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
-    // 遍历每个面
+    // Iterate over each face
     for (faceIndex, spec) in specs.enumerated() {
-      // 直接裁剪，不使用缓存（避免材质混乱）
-      // 在同一皮肤渲染过程中，每个区域通常只裁剪一次，缓存收益有限
-      // 而且NSImage实例可能被复用加载不同内容，缓存可能导致错误结果
+      // Crop directly without cache (avoid material confusion)
+      // During skin rendering, each region is typically cropped only once, cache benefit is limited
+      // Also NSImage instances may be reused to load different content, cache could cause incorrect results
       guard case .success(let faceImage) = TextureProcessor.crop(skinImage, rect: spec.rect),
             let cgImage = faceImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
       else {
@@ -179,13 +173,12 @@ final class VoxelOuterLayerBuilder {
       let width = Int(spec.rect.width)
       let height = Int(spec.rect.height)
 
-      // 优化：直接使用CGImage的像素数据（如果格式匹配）
-      // 如果格式不匹配，再使用CGContext转换
+      // Optimization: Use CGImage pixel data directly (if format matches)
+      // If format doesn't match, use CGContext to convert
       let data: UnsafePointer<UInt8>
       let bytesPerRow: Int
-      let shouldFreeData: Bool
-      
-      // 使用CGContext读取像素数据
+
+      // Use CGContext to read pixel data
       guard let context = CGContext(
         data: nil,
         width: width,
@@ -202,18 +195,17 @@ final class VoxelOuterLayerBuilder {
       context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
       
       guard let pixelData = context.data else { continue }
-      // 将 UnsafeMutablePointer 转换为 UnsafePointer（因为我们只读取数据）
+      // Convert UnsafeMutablePointer to UnsafePointer (since we only read data)
       let mutablePointer = pixelData.assumingMemoryBound(to: UInt8.self)
       data = UnsafePointer(mutablePointer)
       bytesPerRow = width * 4
-      shouldFreeData = false  // CGContext管理内存
 
-      // 预先计算该面的参数
+      // Pre-calculate parameters for this face
       let faceSizeDifference = faceSizeDifferences[faceIndex]
       let thickness = faceThicknesses[faceIndex]
       let halfThickness = halfThicknesses[faceIndex]
       
-      // 预先计算位置计算所需的常量
+      // Pre-calculate constants needed for position calculation
       let halfWidth = CGFloat(config.boxSize.x) / 2.0
       let halfHeight = CGFloat(config.boxSize.y) / 2.0
       let halfLength = CGFloat(config.boxSize.z) / 2.0
@@ -229,20 +221,20 @@ final class VoxelOuterLayerBuilder {
       let startZ = -halfLength + offsetZ + config.voxelSize / 2.0
       let startZH = -halfLength + offsetZH + config.voxelSize / 2.0
       
-      // 位置偏移计算
+      // Position offset calculation
       let halfSizeDifference = faceSizeDifference / 2.0
       var offset = halfThickness - halfSizeDifference
       if abs(offset) < 0.001 {
         offset = 0.01
       }
 
-      // 第二阶段优化：行内合并 - 逐行处理并合并连续相同颜色的像素段
-      // 第四阶段优化：收集所有段，按颜色分组，批量创建节点
+      // Phase 2 optimization: Inline merging - process row by row and merge consecutive same-color pixel segments
+      // Phase 4 optimization: Collect all segments, group by color, batch create nodes
       var allSegments: [(segment: VoxelSegment, position: SCNVector3, mergedWidth: CGFloat)] = []
-      allSegments.reserveCapacity(height * 10)  // 预分配容量，假设平均每行10个段
+      allSegments.reserveCapacity(height * 10)  // Pre-allocate capacity, assuming average 10 segments per row
       
       for y in 0..<height {
-        // 处理当前行，合并连续相同颜色的像素段
+        // Process current row, merge consecutive same-color pixel segments
         let segments = processRowPixels(
           row: y,
           width: width,
@@ -250,18 +242,18 @@ final class VoxelOuterLayerBuilder {
           bytesPerRow: bytesPerRow
         )
         
-        // 计算每个段的位置信息
+        // Calculate position info for each segment
         for segment in segments {
           let segmentLength = segment.endX - segment.startX
           let mergedWidth = CGFloat(segmentLength) * config.voxelSize
           
-          // 计算段的中心位置
+          // Calculate segment center position
           let segmentStart = CGFloat(segment.startX)
           let segmentEnd = CGFloat(segment.endX)
           let centerPixelIndex = (segmentStart + segmentEnd - 1.0) / 2.0
           let centerOffset = centerPixelIndex * config.voxelSize
           
-          // 计算合并后体素的位置（段的几何中心）
+          // Calculate merged voxel position (segment geometric center)
           var voxelPosition: SCNVector3
           switch faceIndex {
           case 0: // front (+Z)
@@ -302,12 +294,12 @@ final class VoxelOuterLayerBuilder {
         }
       }
       
-      // 按颜色键分组段（第四阶段优化：减少相同材质的使用）
+      // Group segments by color key (Phase 4 optimization: reduce same-material usage)
       let segmentsByColor = Dictionary(grouping: allSegments) { $0.segment.colorKey }
       
-      // 为每个颜色组批量创建节点
-      for (colorKey, colorSegments) in segmentsByColor {
-        // 获取材质（使用第一个段的RGB值，因为同组的颜色相同）
+      // Batch create nodes for each color group
+      for (_, colorSegments) in segmentsByColor {
+        // Get material (use first segment's RGB values since same-group colors are identical)
         let firstSegment = colorSegments[0].segment
         let material = getOrCreateMaterial(
           r: firstSegment.r,
@@ -316,8 +308,8 @@ final class VoxelOuterLayerBuilder {
           a: firstSegment.a
         )
         
-        // 为每个段创建节点（使用缓存的材质）
-        for (segment, position, mergedWidth) in colorSegments {
+        // Create nodes for each segment (use cached material)
+        for (_, position, mergedWidth) in colorSegments {
           let voxelNode = createMergedVoxelNode(
             material: material,
             position: position,
@@ -332,24 +324,7 @@ final class VoxelOuterLayerBuilder {
     }
   }
 
-  // MARK: - Material Cache Management
-  
-  /// 获取或创建材质（从NSColor，保留用于兼容性）
-  private func getOrCreateMaterial(for color: NSColor) -> SCNMaterial {
-    let rgbKey = colorToRGBKey(color)
-    
-    if let cachedMaterial = materialCache[rgbKey] {
-      return cachedMaterial
-    }
-    
-    let material = SCNMaterial()
-    configureBaseMaterialProperties(material, color: color)
-    materialCache[rgbKey] = material
-    
-    return material
-  }
-  
-  /// 第三阶段优化：直接从RGB值获取或创建材质（避免不必要的NSColor对象创建）
+  /// Phase 3 optimization: Get or create material directly from RGB values (avoid unnecessary NSColor object creation)
   private func getOrCreateMaterial(r: UInt8, g: UInt8, b: UInt8, a: UInt8) -> SCNMaterial {
     let rgbKey = rgbToColorKey(r: r, g: g, b: b)
     
@@ -357,7 +332,7 @@ final class VoxelOuterLayerBuilder {
       return cachedMaterial
     }
     
-    // 只有在创建新材质时才创建NSColor对象
+    // Only create NSColor object when creating new material
     let color = NSColor(
       red: CGFloat(r) / 255.0,
       green: CGFloat(g) / 255.0,
@@ -370,14 +345,6 @@ final class VoxelOuterLayerBuilder {
     materialCache[rgbKey] = material
     
     return material
-  }
-  
-  /// 从NSColor创建RGB键（保留用于兼容性）
-  private func colorToRGBKey(_ color: NSColor) -> UInt32 {
-    let r = UInt32(min(255, max(0, Int(color.redComponent * 255.0))))
-    let g = UInt32(min(255, max(0, Int(color.greenComponent * 255.0))))
-    let b = UInt32(min(255, max(0, Int(color.blueComponent * 255.0))))
-    return (r << 24) | (g << 16) | (b << 8)
   }
   
   /// 第三阶段优化：直接从RGB值创建颜色键（避免NSColor对象创建）
@@ -408,16 +375,6 @@ final class VoxelOuterLayerBuilder {
     let a: UInt8       // Alpha分量 (0-255)
     let row: Int
     let colorKey: UInt32  // 缓存的颜色键，用于快速比较
-    
-    /// 延迟创建NSColor对象（仅在需要时创建，如创建材质时）
-    var color: NSColor {
-      NSColor(
-        red: CGFloat(r) / 255.0,
-        green: CGFloat(g) / 255.0,
-        blue: CGFloat(b) / 255.0,
-        alpha: CGFloat(a) / 255.0
-      )
-    }
   }
   
   /// 处理一行的像素，合并连续相同颜色的像素段
@@ -542,23 +499,6 @@ final class VoxelOuterLayerBuilder {
     material.lightingModel = .lambert
   }
 
-  private func createVoxelNode(
-    color: NSColor,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    return createMergedVoxelNode(
-      color: color,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: voxelSize,  // 默认单个像素宽度
-      thickness: thickness
-    )
-  }
-  
   /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
   /// 第四阶段优化：接受预创建的材质，避免重复创建
   /// - Parameters:
@@ -597,76 +537,5 @@ final class VoxelOuterLayerBuilder {
     let node = SCNNode(geometry: voxelGeometry)
     node.position = position
     return node
-  }
-  
-  /// 创建合并的体素节点（支持可变宽度，用于第二阶段优化）
-  /// 第三阶段优化：直接从RGB值创建，避免NSColor对象创建
-  /// - Parameters:
-  ///   - r: 红色分量 (0-255)
-  ///   - g: 绿色分量 (0-255)
-  ///   - b: 蓝色分量 (0-255)
-  ///   - a: Alpha分量 (0-255)
-  ///   - position: 体素位置（中心点）
-  ///   - faceIndex: 面索引
-  ///   - voxelSize: 基础体素大小
-  ///   - mergedWidth: 合并后的宽度（可以是多个像素的宽度）
-  ///   - thickness: 体素厚度
-  /// - Returns: 合并后的体素节点
-  private func createMergedVoxelNode(
-    r: UInt8,
-    g: UInt8,
-    b: UInt8,
-    a: UInt8,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    mergedWidth: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    // 第三阶段优化：直接使用RGB值创建材质，避免不必要的NSColor对象创建
-    let material = getOrCreateMaterial(r: r, g: g, b: b, a: a)
-    return createMergedVoxelNode(
-      material: material,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: mergedWidth,
-      thickness: thickness
-    )
-  }
-  
-  /// 创建合并的体素节点（从NSColor，保留用于兼容性）
-  /// - Parameters:
-  ///   - color: 体素颜色
-  ///   - position: 体素位置（中心点）
-  ///   - faceIndex: 面索引
-  ///   - voxelSize: 基础体素大小
-  ///   - mergedWidth: 合并后的宽度（可以是多个像素的宽度）
-  ///   - thickness: 体素厚度
-  /// - Returns: 合并后的体素节点
-  private func createMergedVoxelNode(
-    color: NSColor,
-    position: SCNVector3,
-    faceIndex: Int,
-    voxelSize: CGFloat,
-    mergedWidth: CGFloat,
-    thickness: CGFloat
-  ) -> SCNNode {
-    let r = UInt8(min(255, max(0, Int(color.redComponent * 255.0))))
-    let g = UInt8(min(255, max(0, Int(color.greenComponent * 255.0))))
-    let b = UInt8(min(255, max(0, Int(color.blueComponent * 255.0))))
-    let a = UInt8(min(255, max(0, Int(color.alphaComponent * 255.0))))
-    
-    return createMergedVoxelNode(
-      r: r,
-      g: g,
-      b: b,
-      a: a,
-      position: position,
-      faceIndex: faceIndex,
-      voxelSize: voxelSize,
-      mergedWidth: mergedWidth,
-      thickness: thickness
-    )
   }
 }

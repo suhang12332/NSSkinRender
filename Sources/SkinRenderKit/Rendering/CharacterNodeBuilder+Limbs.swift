@@ -9,16 +9,12 @@ import SceneKit
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Common Limb Structure
-
   /// Result of building a single limb (arm or leg)
   private struct SingleLimbNodes {
     let group: SCNNode
     let base: SCNNode
     let overlay: SCNNode
   }
-
-  // MARK: - Arm Nodes
 
   struct ArmNodes {
     let rightGroup: SCNNode
@@ -140,8 +136,6 @@ extension CharacterNodeBuilder {
       overlay: sleeveNode
     )
   }
-
-  // MARK: - Leg Nodes
 
   struct LegNodes {
     let rightGroup: SCNNode

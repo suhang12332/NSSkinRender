@@ -22,11 +22,10 @@ extension SceneKitCharacterViewController {
     }
   }
 
-  /// Load default texture only if no skin is set (does not rebuild)
+  /// Rebuild if no skin is set (does not set a default)
   /// Used during initialization
   func ensureDefaultTextureLoaded(rebuild: Bool) {
     guard skinImage == nil else { return }
-    self.skinImage = EmbeddedTextures.alexImage
 
     if rebuild {
       rebuildCharacter()

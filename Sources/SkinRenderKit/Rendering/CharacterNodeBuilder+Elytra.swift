@@ -16,8 +16,6 @@ struct ElytraNodes {
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Elytra
-
   /// Build elytra wings using plane geometry
   /// - Parameters:
   ///   - elytraImage: The elytra texture image (64x32)

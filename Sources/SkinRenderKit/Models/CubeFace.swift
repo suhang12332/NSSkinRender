@@ -3,7 +3,6 @@
 //  SkinRenderKit
 //
 
-import Foundation
 import CoreGraphics
 
 // swiftlint:disable comma colon
@@ -34,7 +33,6 @@ public enum CubeFace: String, CaseIterable {
     Spec(.bottom, rect: CGRect(x: 11, y: 0, width: 10, height:  1), rotate180: true)
   ]
 
-  // MARK: - Head
   public static let headBase: [Spec] = [
     Spec(.front,  rect: CGRect(x:  8, y: 8, width: 8, height: 8)),
     Spec(.right,  rect: CGRect(x: 16, y: 8, width: 8, height: 8)),
@@ -53,7 +51,6 @@ public enum CubeFace: String, CaseIterable {
     Spec(.bottom, rect: CGRect(x: 48, y: 0, width: 8, height: 8))
   ]
 
-  // MARK: - Body
   public static let bodyBase: [Spec] = [
     Spec(.front,  rect: CGRect(x: 20, y: 20, width: 8, height: 12)),
     Spec(.right,  rect: CGRect(x: 28, y: 20, width: 4, height: 12)),
@@ -72,7 +69,6 @@ public enum CubeFace: String, CaseIterable {
     Spec(.bottom, rect: CGRect(x: 28, y: 32, width: 8, height:  4))
   ]
 
-  // MARK: - Arms
   public static func armBase(isLeft: Bool, armWidth: CGFloat) -> [Spec] {
     if isLeft {
       return [
@@ -117,7 +113,6 @@ public enum CubeFace: String, CaseIterable {
     }
   }
 
-  // MARK: - Elytra (Wings)
   /// Left wing texture specification for plane rendering
   /// The left wing uses the main wing texture from the elytra texture (64x32)
   public static let elytraLeftWing: Spec = Spec(.front, rect: CGRect(x: 12, y: 0, width: 10, height: 20))
@@ -126,7 +121,6 @@ public enum CubeFace: String, CaseIterable {
   /// The right wing mirrors the left wing texture
   public static let elytraRightWing: Spec = Spec(.front, rect: CGRect(x: 22, y: 0, width: 10, height: 20))
 
-  // MARK: - Legs
   public static func legBase(isLeft: Bool) -> [Spec] {
     if isLeft {
       return [

@@ -37,35 +37,35 @@ extension SceneKitCharacterViewController {
   }
 
   func setupLighting() {
-    // Ambient light - 柔和的环境光，保持自然层次
+    // Ambient light - Soft ambient light to maintain natural depth
     scene.rootNode.addChildNode(createLightNode(
       type: .ambient,
       intensity: 200,
       color: NSColor(white: 0.9, alpha: 1.0)
     ))
 
-    // Main directional light with shadows - 从侧面前方照射，模拟自然光
+    // Main directional light with shadows - Illuminated from the side-front to simulate natural light
     let directionalLight = createLightNode(
       type: .directional,
       intensity: 1200,
       color: NSColor(red: 1.0, green: 0.97, blue: 0.92, alpha: 1.0),  // slightly warm
       castsShadow: true,
-      eulerAngles: SCNVector3(-Float.pi / 4, Float.pi / 5, 0)  // 侧面前方：前方约36度，高度约45度
+      eulerAngles: SCNVector3(-Float.pi / 4, Float.pi / 5, 0)  // Side-front: approximately 36 degrees forward, 45 degrees elevation
     )
     if let light = directionalLight.light {
       configureShadowLight(light)
     }
     scene.rootNode.addChildNode(directionalLight)
 
-    // Fill light (auxiliary directional light) - 从另一侧前方补光，减少对比
+    // Fill light (auxiliary directional light) - Fill light from the opposite side front, reduce contrast
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
       intensity: 500,
       color: NSColor(red: 0.92, green: 0.96, blue: 1.0, alpha: 1.0),  // slightly cool
-      eulerAngles: SCNVector3(-Float.pi / 4, -Float.pi / 5, 0)  // 另一侧前方补光
+      eulerAngles: SCNVector3(-Float.pi / 4, -Float.pi / 5, 0)  // Fill light from the opposite side front
     ))
 
-    // Rim/back light (outline light) - 柔和背光，避免过曝
+    // Rim/back light (outline light) - Soft backlight to avoid overexposure
     scene.rootNode.addChildNode(createLightNode(
       type: .directional,
       intensity: 280,
@@ -73,7 +73,7 @@ extension SceneKitCharacterViewController {
       eulerAngles: SCNVector3(-Float.pi / 3, -Float.pi * 0.65, 0)
     ))
 
-    // Top omni light - 少量顶光，提亮头部和肩线
+    // Top omni light - Slight top light to brighten the head and shoulder line
     scene.rootNode.addChildNode(createLightNode(
       type: .omni,
       intensity: 220,
@@ -125,11 +125,11 @@ extension SceneKitCharacterViewController {
   }
 
   // Configure shadow settings for main directional light
-  // 增强阴影对比度，让光影效果更明显
+  // Enhance shadow contrast for more pronounced lighting effects
   private func configureShadowLight(_ light: SCNLight) {
     light.shadowMode = .deferred
     light.shadowRadius = 5.0
-    light.shadowColor = NSColor.black.withAlphaComponent(0.55)  // 增强阴影深度
+    light.shadowColor = NSColor.black.withAlphaComponent(0.55)  // Enhance shadow depth
     light.shadowMapSize = CGSize(width: 2048, height: 2048)
     light.shadowBias = 2.0
     light.shadowSampleCount = 32
@@ -148,8 +148,6 @@ extension SceneKitCharacterViewController {
     rightClickGesture.buttonMask = 0x2
     scnView.addGestureRecognizer(rightClickGesture)
   }
-
-  // MARK: - Shadow Configuration
 
   /// Recursively enable shadow casting for a node and all its children
   func enableShadowCasting(for node: SCNNode) {

@@ -7,8 +7,6 @@ import SceneKit
 
 extension SceneKitCharacterViewController {
 
-  // MARK: - Action Handlers
-
   @objc func handleRightClick(_ gestureRecognizer: NSClickGestureRecognizer) {
     let location = gestureRecognizer.location(in: scnView)
     if isPointOverUIButton(location) { return }

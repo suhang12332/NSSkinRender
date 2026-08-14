@@ -12,12 +12,8 @@ import SwiftUI
 /// This representable allows integration of SceneKit-based character rendering into SwiftUI views
 public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable {
   
-  // MARK: - Equatable Conformance
-  
   // Note: NSViewControllerRepresentable doesn't require Equatable, but implementing it
   // helps SwiftUI detect changes more reliably, especially for Optional properties
-
-  // MARK: - Properties
 
   let texturePath: String?
   let skinImage: NSImage?
@@ -26,8 +22,6 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
   let rotationDuration: TimeInterval
   let backgroundColor: NSColor
   let debugMode: Bool
-
-  // MARK: - Initializers
 
   /// Initialize with optional texture path for skin
   public init(
@@ -83,13 +77,10 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     self.debugMode = debugMode
   }
 
-
-  // MARK: - NSViewControllerRepresentable
-
   public func makeNSViewController(context: Context) -> SceneKitCharacterViewController {
     let controller: SceneKitCharacterViewController
     
-    // 根据可用的纹理数据创建控制器
+    // Create controller based on available texture data
     if let skinImage = skinImage {
       controller = SceneKitCharacterViewController(
         skinImage: skinImage,
@@ -108,7 +99,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
         backgroundColor: backgroundColor,
         debugMode: debugMode
       )
-      // 如果有 capeImage，直接设置属性（视图加载前）
+      // If capeImage exists, set property directly (before view loads)
       if let capeImage = capeImage {
         controller.capeImage = capeImage
         controller.capeTexturePath = nil
@@ -120,7 +111,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
         backgroundColor: backgroundColor,
         debugMode: debugMode
       )
-      // 如果有 capeImage，直接设置属性（视图加载前）
+      // If capeImage exists, set property directly (before view loads)
       if let capeImage = capeImage {
         controller.capeImage = capeImage
         controller.capeTexturePath = nil
@@ -158,13 +149,13 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
     nsViewController.updateBackgroundColor(backgroundColor)
   }
   
-  /// 当 SwiftUI 视图被移除时调用，确保资源被释放
+  /// Called when SwiftUI view is removed, ensures resources are released
   public static func dismantleNSViewController(
     _ nsViewController: SceneKitCharacterViewController,
     coordinator: Void
   ) {
-    // 确保在视图被移除时清理资源
-    // viewWillDisappear 和 viewDidDisappear 会自动调用，但这里作为额外保障
+    // Ensure resources are cleaned up when view is removed
+    // viewWillDisappear and viewDidDisappear are called automatically, but this is an additional safeguard
     nsViewController.cleanupResources()
   }
 }

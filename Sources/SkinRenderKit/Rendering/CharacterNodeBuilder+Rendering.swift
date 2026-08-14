@@ -9,8 +9,6 @@ import SceneKit
 
 extension CharacterNodeBuilder {
 
-  // MARK: - Rendering Priorities
-
   func setupRenderingPriorities(_ nodes: CharacterNodes) {
     // Base layers: body < head < limbs
     nodes.body.renderingOrder = 100
@@ -34,7 +32,7 @@ extension CharacterNodeBuilder {
     // Elytra - same priority as cape
     nodes.elytraPivot?.renderingOrder = 150
 
-    // MARK: - Z-Fighting Prevention Offsets
+    // Z-Fighting Prevention Offsets
     // When two surfaces occupy the same depth position, the GPU cannot determine
     // which should be rendered in front, causing flickering (Z-fighting).
     // We apply tiny position offsets to create depth separation while remaining
@@ -67,8 +65,6 @@ extension CharacterNodeBuilder {
     applyXOffset(to: nodes.rightArmSleeve, offset: 0.01)
   }
 
-  // MARK: - Position Offsets
-
   /// Applies a small Z position offset to prevent Z-fighting
   private func applyZOffset(to node: SCNNode, offset: Float) {
     node.position.z += CGFloat(offset)
@@ -78,8 +74,6 @@ extension CharacterNodeBuilder {
   private func applyXOffset(to node: SCNNode, offset: Float) {
     node.position.x += CGFloat(offset)
   }
-
-  // MARK: - Outer Layer Rebuild Helpers
 
   /// Rebuild voxel-based outer layers (hat, jacket, sleeves) using a new skin image.
   ///
