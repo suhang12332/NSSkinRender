@@ -138,9 +138,6 @@ public class SceneKitCharacterViewController: NSViewController {
   public override func viewDidLoad() {
     super.viewDidLoad()
 
-    // Load default texture if none set
-    ensureDefaultTextureLoaded(rebuild: false)
-
     setupScene()
     rebuildCharacter()
     setupCamera()
@@ -152,12 +149,6 @@ public class SceneKitCharacterViewController: NSViewController {
   public override func viewWillDisappear() {
     super.viewWillDisappear()
     // Stop animations and clean up resources immediately when page is about to close
-    cleanupResources()
-  }
-  
-  public override func viewDidDisappear() {
-    super.viewDidDisappear()
-    // Page is closed, ensure all resources are released
     cleanupResources()
   }
 
@@ -218,13 +209,7 @@ public class SceneKitCharacterViewController: NSViewController {
     // Clean up geometry and materials
     if let geometry = node.geometry {
       // Clear material contents to release texture references
-      for material in geometry.materials {
-        material.diffuse.contents = nil
-        material.ambient.contents = nil
-        material.specular.contents = nil
-        material.normal.contents = nil
-        material.emission.contents = nil
-      }
+      geometry.clearMaterialContents()
       geometry.materials = []
     }
     

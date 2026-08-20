@@ -24,10 +24,7 @@ public struct SkinRenderView: View {
   
   // External binding for cape (required, cape only supports Binding)
   private var capeImageBinding: Binding<NSImage?>?
-  
-  // Auxiliary state for tracking external binding changes
-  @State private var externalCapeImageTracker: NSImage?
-  
+
   // Computed property: current skin value
   private var currentSkinImage: NSImage? {
     externalSkinImageBinding?.wrappedValue ?? internalSkinImage
@@ -50,6 +47,31 @@ public struct SkinRenderView: View {
   public let onSkinDropped: ((NSImage) -> Void)?
   public let onCapeDropped: ((NSImage) -> Void)?
 
+  /// Shared setup for all public initializers
+  private init(
+    initialTexturePath: String?,
+    initialSkinImage: NSImage?,
+    externalSkinImageBinding: Binding<NSImage?>?,
+    externalTexturePathBinding: Binding<String?>?,
+    capeImage: Binding<NSImage?>?,
+    playerModel: PlayerModel,
+    rotationDuration: TimeInterval,
+    backgroundColor: NSColor,
+    onSkinDropped: ((NSImage) -> Void)?,
+    onCapeDropped: ((NSImage) -> Void)?
+  ) {
+    self._texturePath = State(initialValue: initialTexturePath)
+    self._internalSkinImage = State(initialValue: initialSkinImage)
+    self.externalSkinImageBinding = externalSkinImageBinding
+    self.externalTexturePathBinding = externalTexturePathBinding
+    self.capeImageBinding = capeImage
+    self.playerModel = playerModel
+    self.rotationDuration = rotationDuration
+    self.backgroundColor = backgroundColor
+    self.onSkinDropped = onSkinDropped
+    self.onCapeDropped = onCapeDropped
+  }
+
   /// Initialize with texture path for skin (cape must use Binding)
   public init(
     texturePath: String? = nil,
@@ -60,17 +82,18 @@ public struct SkinRenderView: View {
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
-    self._texturePath = State(initialValue: texturePath)
-    self._internalSkinImage = State(initialValue: nil)
-    self.externalSkinImageBinding = nil
-    self.externalTexturePathBinding = nil
-    self.capeImageBinding = capeImage
-    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.onSkinDropped = onSkinDropped
-    self.onCapeDropped = onCapeDropped
+    self.init(
+      initialTexturePath: texturePath,
+      initialSkinImage: nil,
+      externalSkinImageBinding: nil,
+      externalTexturePathBinding: nil,
+      capeImage: capeImage,
+      playerModel: playerModel,
+      rotationDuration: rotationDuration,
+      backgroundColor: backgroundColor,
+      onSkinDropped: onSkinDropped,
+      onCapeDropped: onCapeDropped
+    )
   }
   
   /// Initialize with texture path binding for skin (cape must use Binding)
@@ -83,17 +106,18 @@ public struct SkinRenderView: View {
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
-    self._texturePath = State(initialValue: texturePath.wrappedValue)
-    self._internalSkinImage = State(initialValue: nil)
-    self.externalSkinImageBinding = nil
-    self.externalTexturePathBinding = texturePath
-    self.capeImageBinding = capeImage
-    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.onSkinDropped = onSkinDropped
-    self.onCapeDropped = onCapeDropped
+    self.init(
+      initialTexturePath: texturePath.wrappedValue,
+      initialSkinImage: nil,
+      externalSkinImageBinding: nil,
+      externalTexturePathBinding: texturePath,
+      capeImage: capeImage,
+      playerModel: playerModel,
+      rotationDuration: rotationDuration,
+      backgroundColor: backgroundColor,
+      onSkinDropped: onSkinDropped,
+      onCapeDropped: onCapeDropped
+    )
   }
 
   /// Initialize with direct NSImage texture for skin (cape must use Binding)
@@ -106,17 +130,18 @@ public struct SkinRenderView: View {
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
-    self._texturePath = State(initialValue: nil)
-    self._internalSkinImage = State(initialValue: skinImage)
-    self.externalSkinImageBinding = nil
-    self.externalTexturePathBinding = nil
-    self.capeImageBinding = capeImage
-    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.onSkinDropped = onSkinDropped
-    self.onCapeDropped = onCapeDropped
+    self.init(
+      initialTexturePath: nil,
+      initialSkinImage: skinImage,
+      externalSkinImageBinding: nil,
+      externalTexturePathBinding: nil,
+      capeImage: capeImage,
+      playerModel: playerModel,
+      rotationDuration: rotationDuration,
+      backgroundColor: backgroundColor,
+      onSkinDropped: onSkinDropped,
+      onCapeDropped: onCapeDropped
+    )
   }
   
   /// Initialize with skin image binding (cape must use Binding)
@@ -129,17 +154,18 @@ public struct SkinRenderView: View {
     onSkinDropped: ((NSImage) -> Void)? = nil,
     onCapeDropped: ((NSImage) -> Void)? = nil
   ) {
-    self._texturePath = State(initialValue: nil)
-    self._internalSkinImage = State(initialValue: nil)
-    self.externalSkinImageBinding = skinImage
-    self.externalTexturePathBinding = nil
-    self.capeImageBinding = capeImage
-    self._externalCapeImageTracker = State(initialValue: capeImage?.wrappedValue)
-    self.playerModel = playerModel
-    self.rotationDuration = rotationDuration
-    self.backgroundColor = backgroundColor
-    self.onSkinDropped = onSkinDropped
-    self.onCapeDropped = onCapeDropped
+    self.init(
+      initialTexturePath: nil,
+      initialSkinImage: nil,
+      externalSkinImageBinding: skinImage,
+      externalTexturePathBinding: nil,
+      capeImage: capeImage,
+      playerModel: playerModel,
+      rotationDuration: rotationDuration,
+      backgroundColor: backgroundColor,
+      onSkinDropped: onSkinDropped,
+      onCapeDropped: onCapeDropped
+    )
   }
 
   public var body: some View {
@@ -190,14 +216,12 @@ public struct SkinRenderView: View {
 
   private func handleDrop(providers: [NSItemProvider], target: DropTarget) -> Bool {
     guard let provider = providers.first else {
-      showDropError("No drag content detected")
       return false
     }
 
     ImageDropHandler.loadImage(from: provider) { image in
       DispatchQueue.main.async {
         guard let image = image else {
-          showDropError("Failed to read image data")
           return
         }
 
@@ -226,10 +250,8 @@ public struct SkinRenderView: View {
         texturePath = nil
       }
       onSkinDropped?(validImage)
-    case .invalidDimensions(let width, let height, let expected):
-      showDropError("Skin size error: \(width)×\(height), need \(expected)")
-    case .loadFailed(let message):
-      showDropError(message)
+    case .invalidDimensions, .loadFailed:
+      break
     }
   }
 
@@ -240,18 +262,10 @@ public struct SkinRenderView: View {
       if let binding = capeImageBinding {
         binding.wrappedValue = validImage
         onCapeDropped?(validImage)
-      } else {
-        showDropError("Cape requires Binding. Please use capeImage: Binding<NSImage?> parameter.")
       }
-    case .invalidDimensions(let width, let height, let expected):
-      showDropError("Cape size error: \(width)×\(height), need \(expected)")
-    case .loadFailed(let message):
-      showDropError(message)
+    case .invalidDimensions, .loadFailed:
+      break
     }
-  }
-
-  private func showDropError(_ message: String) {
-    // Debug log removed; add UI presentation logic here if user-visible alerts are needed
   }
 
   private func showFileImporter() {
@@ -272,7 +286,6 @@ public struct SkinRenderView: View {
 
   private func loadSkinFromFile(at url: URL) {
     guard let image = NSImage(contentsOf: url) else {
-      showDropError("Unable to read image file")
       return
     }
 

@@ -49,15 +49,6 @@ public enum CharacterDimensions {
   /// Jacket overlay depth (thickness 0.125)
   public static let jacketDepth: CGFloat = 4.125
 
-  /// Leg width (4 pixels)
-  public static let legWidth: CGFloat = 4
-
-  /// Leg height (12 pixels)
-  public static let legHeight: CGFloat = 12
-
-  /// Leg depth (4 pixels)
-  public static let legDepth: CGFloat = 4
-
   /// Cape width (10 pixels)
   public static let capeWidth: CGFloat = 10
 
@@ -86,10 +77,10 @@ public enum CharacterDimensions {
   public static let elytraWingHeight: CGFloat = 20
 
   /// Elytra pivot Y position (shoulder line, same as cape)
-  public static let elytraPivotY: CGFloat = 11
+  public static let elytraPivotY: CGFloat = capePivotY
 
   /// Elytra pivot Z position (behind body, same as cape)
-  public static let elytraPivotZ: CGFloat = -2.5
+  public static let elytraPivotZ: CGFloat = capePivotZ
 
   /// Elytra wing Y offset from pivot
   public static let elytraWingYOffset: CGFloat = -10
