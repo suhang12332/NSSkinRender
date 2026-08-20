@@ -79,7 +79,7 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
 
   public func makeNSViewController(context: Context) -> SceneKitCharacterViewController {
     let controller: SceneKitCharacterViewController
-    
+
     // Create controller based on available texture data
     if let skinImage = skinImage {
       controller = SceneKitCharacterViewController(
@@ -99,11 +99,6 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
         backgroundColor: backgroundColor,
         debugMode: debugMode
       )
-      // If capeImage exists, set property directly (before view loads)
-      if let capeImage = capeImage {
-        controller.capeImage = capeImage
-        controller.capeTexturePath = nil
-      }
     } else {
       controller = SceneKitCharacterViewController(
         playerModel: playerModel,
@@ -111,13 +106,12 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
         backgroundColor: backgroundColor,
         debugMode: debugMode
       )
-      // If capeImage exists, set property directly (before view loads)
-      if let capeImage = capeImage {
-        controller.capeImage = capeImage
-        controller.capeTexturePath = nil
-      }
     }
-    
+
+    // If capeImage exists, set property directly (before view loads)
+    controller.capeImage = capeImage
+    controller.capeTexturePath = nil
+
     return controller
   }
 
@@ -133,8 +127,6 @@ public struct SceneKitCharacterViewRepresentable: NSViewControllerRepresentable 
       nsViewController.updateTexture(image: skinImage)
     } else if let texturePath = texturePath {
       nsViewController.updateTexture(path: texturePath)
-    } else {
-      nsViewController.loadDefaultTexture()
     }
 
     // Update cape texture (only via image memory)

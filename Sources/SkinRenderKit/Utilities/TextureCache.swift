@@ -27,11 +27,6 @@ private struct CropCacheKey: Hashable {
 private struct CropCacheEntry {
   let croppedImage: NSImage
   let hasTransparency: Bool
-  
-  init(croppedImage: NSImage, hasTransparency: Bool) {
-    self.croppedImage = croppedImage
-    self.hasTransparency = hasTransparency
-  }
 }
 
 /// Cache manager for texture operations
