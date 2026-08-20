@@ -7,54 +7,47 @@ import SceneKit
 
 extension SceneKitCharacterViewController {
 
-  /// Shared update flow for skin and cape textures (path or in-memory image)
-  private func applyTextureUpdate(
-    path: String?,
-    image: NSImage?,
-    pathStorage: inout String?,
-    imageStorage: inout NSImage?,
-    loadFromPath: (String) -> Void,
-    updateGeometry: () -> Void
-  ) {
+  private func applySkinUpdate(path: String? = nil, image: NSImage? = nil) {
     if let path = path {
       // Skip if path unchanged
-      guard pathStorage != path else { return }
-      pathStorage = path
-      loadFromPath(path)
-      if imageStorage != nil {
-        updateGeometry()
+      guard skinTexturePath != path else { return }
+      self.skinTexturePath = path
+      loadTexture()
+      if skinImage != nil {
+        updateSkinGeometry()
+      }
+      return
+    }
+
+    if let image = image {
+      // No longer short-circuit only through instance equality; allow external code to reuse the same NSImage instance but update its content
+      self.skinImage = image
+      self.skinTexturePath = nil
+      updateSkinGeometry()
+    }
+  }
+
+  private func applyCapeUpdate(path: String? = nil, image: NSImage? = nil) {
+    if let path = path {
+      // Return directly if path unchanged to avoid invalid refresh
+      guard capeTexturePath != path else {
+        return
+      }
+      self.capeTexturePath = path
+      loadCapeTexture(from: path)
+      // Update cape geometry only when image is successfully loaded
+      if capeImage != nil {
+        updateCapeGeometry()
       }
       return
     }
 
     if let image = image {
       // Allow the same instance to be passed again to support in-place modification of NSImage content
-      imageStorage = image
-      pathStorage = nil
-      updateGeometry()
+      self.capeImage = image
+      self.capeTexturePath = nil
+      updateCapeGeometry()
     }
-  }
-
-  private func applySkinUpdate(path: String? = nil, image: NSImage? = nil) {
-    applyTextureUpdate(
-      path: path,
-      image: image,
-      pathStorage: &skinTexturePath,
-      imageStorage: &skinImage,
-      loadFromPath: { _ in loadTexture() },
-      updateGeometry: { updateSkinGeometry() }
-    )
-  }
-
-  private func applyCapeUpdate(path: String? = nil, image: NSImage? = nil) {
-    applyTextureUpdate(
-      path: path,
-      image: image,
-      pathStorage: &capeTexturePath,
-      imageStorage: &capeImage,
-      loadFromPath: { loadCapeTexture(from: $0) },
-      updateGeometry: { updateCapeGeometry() }
-    )
   }
 
   public func updateTexture(path: String) {
