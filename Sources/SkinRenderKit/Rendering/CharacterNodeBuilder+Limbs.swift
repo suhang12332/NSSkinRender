@@ -16,6 +16,107 @@ extension CharacterNodeBuilder {
     let overlay: SCNNode
   }
 
+  /// Build a single limb (arm or leg) with its voxelized outer layer
+  private func buildSingleLimb(
+    skinImage: NSImage,
+    isLeft: Bool,
+    limbName: String,
+    dimensions: BoxDimensions,
+    sleeveDimensions: BoxDimensions,
+    position: SCNVector3,
+    groupOffsetY: CGFloat,
+    parent: SCNNode,
+    baseMaterials: (Bool) -> [SCNMaterial],
+    sleeveSpecs: () -> [CubeFace.Spec]
+  ) -> SingleLimbNodes {
+    let side = isLeft ? "Left" : "Right"
+
+    // Limb group (pivot at shoulder/hip)
+    let limbGroup = SCNNode()
+    limbGroup.name = "\(side)\(limbName)Group"
+    limbGroup.position = SCNVector3(
+      CGFloat(position.x),
+      CGFloat(position.y) + groupOffsetY,
+      CGFloat(position.z)
+    )
+    parent.addChildNode(limbGroup)
+
+    // Limb base
+    let baseGeometry = SCNBox(
+      width: dimensions.width,
+      height: dimensions.height,
+      length: dimensions.length,
+      chamferRadius: 0
+    )
+    baseGeometry.materials = baseMaterials(isLeft)
+    let baseNode = SCNNode(geometry: baseGeometry)
+    baseNode.name = "\(side)\(limbName)"
+    baseNode.position = SCNVector3(0, -Float(dimensions.height / 2), 0)
+    limbGroup.addChildNode(baseNode)
+
+    // Sleeve (voxelized outer layer, centered with base limb)
+    let sleeveBoxSize = SCNVector3(
+      sleeveDimensions.width,
+      sleeveDimensions.height,
+      sleeveDimensions.length
+    )
+    let baseSize = SCNVector3(
+      dimensions.width,
+      dimensions.height,
+      dimensions.length
+    )
+    let sleevePosition = SCNVector3(0, -Float(dimensions.height / 2), 0)
+    let sleeveConfig = VoxelOverlayConfig(
+      boxSize: sleeveBoxSize,
+      baseSize: baseSize,
+      voxelThickness: 0.25
+    )
+    let sleeveNode = voxelBuilder.buildVoxelOverlay(
+      from: skinImage,
+      specs: sleeveSpecs(),
+      config: sleeveConfig,
+      position: sleevePosition,
+      name: "\(side)\(limbName)Sleeve"
+    )
+    limbGroup.addChildNode(sleeveNode)
+
+    return SingleLimbNodes(
+      group: limbGroup,
+      base: baseNode,
+      overlay: sleeveNode
+    )
+  }
+
+  private func buildSingleArm(
+    skinImage: NSImage,
+    isLeft: Bool,
+    armDimensions: BoxDimensions,
+    sleeveDimensions: BoxDimensions,
+    position: SCNVector3,
+    playerModel: PlayerModel,
+    parent: SCNNode
+  ) -> SingleLimbNodes {
+    buildSingleLimb(
+      skinImage: skinImage,
+      isLeft: isLeft,
+      limbName: "Arm",
+      dimensions: armDimensions,
+      sleeveDimensions: sleeveDimensions,
+      position: position,
+      groupOffsetY: armDimensions.height / 2,
+      parent: parent,
+      baseMaterials: { isLeft in
+        materialFactory.createArmMaterials(
+          from: skinImage,
+          isLeft: isLeft,
+          isSleeve: false,
+          playerModel: playerModel
+        )
+      },
+      sleeveSpecs: { CubeFace.armSleeve(isLeft: isLeft, armWidth: armDimensions.width) }
+    )
+  }
+
   struct ArmNodes {
     let rightGroup: SCNNode
     let rightBase: SCNNode
@@ -61,79 +162,6 @@ extension CharacterNodeBuilder {
       leftGroup: leftArm.group,
       leftBase: leftArm.base,
       leftOverlay: leftArm.overlay
-    )
-  }
-
-  private func buildSingleArm(
-    skinImage: NSImage,
-    isLeft: Bool,
-    armDimensions: BoxDimensions,
-    sleeveDimensions: BoxDimensions,
-    position: SCNVector3,
-    playerModel: PlayerModel,
-    parent: SCNNode
-  ) -> SingleLimbNodes {
-    let side = isLeft ? "Left" : "Right"
-
-    // Arm group (pivot at shoulder)
-    let armGroup = SCNNode()
-    armGroup.name = "\(side)ArmGroup"
-    armGroup.position = SCNVector3(
-      CGFloat(position.x),
-      CGFloat(position.y) + armDimensions.height / 2,
-      CGFloat(position.z)
-    )
-    parent.addChildNode(armGroup)
-
-    // Arm base
-    let armGeometry = SCNBox(
-      width: armDimensions.width,
-      height: armDimensions.height,
-      length: armDimensions.length,
-      chamferRadius: 0
-    )
-    armGeometry.materials = materialFactory.createArmMaterials(
-      from: skinImage, isLeft: isLeft, isSleeve: false, playerModel: playerModel
-    )
-    let armNode = SCNNode(geometry: armGeometry)
-    armNode.name = "\(side)Arm"
-    armNode.position = SCNVector3(0, -Float(armDimensions.height / 2), 0)
-    armGroup.addChildNode(armNode)
-
-    // Arm sleeve (voxelized outer layer, centered with base arm)
-    let sleeveBoxSize = SCNVector3(
-      sleeveDimensions.width,
-      sleeveDimensions.height,
-      sleeveDimensions.length
-    )
-    let armBaseSize = SCNVector3(
-      armDimensions.width,
-      armDimensions.height,
-      armDimensions.length
-    )
-    let sleevePosition = SCNVector3(0, -Float(armDimensions.height / 2), 0)
-    let sleeveSpecs = CubeFace.armSleeve(
-      isLeft: isLeft,
-      armWidth: armDimensions.width
-    )
-    let sleeveConfig = VoxelOverlayConfig(
-      boxSize: sleeveBoxSize,
-      baseSize: armBaseSize,
-      voxelThickness: 0.25
-    )
-    let sleeveNode = voxelBuilder.buildVoxelOverlay(
-      from: skinImage,
-      specs: sleeveSpecs,
-      config: sleeveConfig,
-      position: sleevePosition,
-      name: "\(side)ArmSleeve"
-    )
-    armGroup.addChildNode(sleeveNode)
-
-    return SingleLimbNodes(
-      group: armGroup,
-      base: armNode,
-      overlay: sleeveNode
     )
   }
 
@@ -191,60 +219,19 @@ extension CharacterNodeBuilder {
     position: SCNVector3,
     parent: SCNNode
   ) -> SingleLimbNodes {
-    let side = isLeft ? "Left" : "Right"
-
-    // Leg group (pivot at hip)
-    let legGroup = SCNNode()
-    legGroup.name = "\(side)LegGroup"
-    legGroup.position = position
-    parent.addChildNode(legGroup)
-
-    // Leg base
-    let legGeometry = SCNBox(
-      width: legDimensions.width,
-      height: legDimensions.height,
-      length: legDimensions.length,
-      chamferRadius: 0
-    )
-    legGeometry.materials = materialFactory.createLegMaterials(
-      from: skinImage, isLeft: isLeft, isSleeve: false
-    )
-    let legNode = SCNNode(geometry: legGeometry)
-    legNode.name = "\(side)Leg"
-    legNode.position = SCNVector3(0, -Float(legDimensions.height / 2), 0)
-    legGroup.addChildNode(legNode)
-
-    // Leg sleeve (voxelized outer layer, centered with base leg)
-    let sleeveBoxSize = SCNVector3(
-      sleeveDimensions.width,
-      sleeveDimensions.height,
-      sleeveDimensions.length
-    )
-    let legBaseSize = SCNVector3(
-      legDimensions.width,
-      legDimensions.height,
-      legDimensions.length
-    )
-    let sleevePosition = SCNVector3(0, -Float(legDimensions.height / 2), 0)
-    let sleeveSpecs = CubeFace.legSleeve(isLeft: isLeft)
-    let sleeveConfig = VoxelOverlayConfig(
-      boxSize: sleeveBoxSize,
-      baseSize: legBaseSize,
-      voxelThickness: 0.25
-    )
-    let sleeveNode = voxelBuilder.buildVoxelOverlay(
-      from: skinImage,
-      specs: sleeveSpecs,
-      config: sleeveConfig,
-      position: sleevePosition,
-      name: "\(side)LegSleeve"
-    )
-    legGroup.addChildNode(sleeveNode)
-
-    return SingleLimbNodes(
-      group: legGroup,
-      base: legNode,
-      overlay: sleeveNode
+    buildSingleLimb(
+      skinImage: skinImage,
+      isLeft: isLeft,
+      limbName: "Leg",
+      dimensions: legDimensions,
+      sleeveDimensions: sleeveDimensions,
+      position: position,
+      groupOffsetY: 0,
+      parent: parent,
+      baseMaterials: { isLeft in
+        materialFactory.createLegMaterials(from: skinImage, isLeft: isLeft, isSleeve: false)
+      },
+      sleeveSpecs: { CubeFace.legSleeve(isLeft: isLeft) }
     )
   }
 }

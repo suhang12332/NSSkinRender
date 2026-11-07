@@ -41,38 +41,37 @@ extension CharacterNodeBuilder {
     // Z-axis offsets: Separate left/right limbs when they overlap (e.g., legs together)
     // Left limbs move forward (+Z), right limbs move backward (-Z)
     // Sleeves need larger offset since they're already offset from base limbs
-    applyZOffset(to: nodes.leftLeg, offset: 0.01)
-    applyZOffset(to: nodes.leftArm, offset: 0.01)
-    applyZOffset(to: nodes.leftLegSleeve, offset: 0.02)
-    applyZOffset(to: nodes.leftArmSleeve, offset: 0.02)
+    applyOffset(0.01, to: nodes.leftLeg, axis: \.z)
+    applyOffset(0.01, to: nodes.leftArm, axis: \.z)
+    applyOffset(0.02, to: nodes.leftLegSleeve, axis: \.z)
+    applyOffset(0.02, to: nodes.leftArmSleeve, axis: \.z)
 
-    applyZOffset(to: nodes.rightArm, offset: -0.01)
-    applyZOffset(to: nodes.rightLeg, offset: -0.01)
-    applyZOffset(to: nodes.rightArmSleeve, offset: -0.02)
-    applyZOffset(to: nodes.rightLegSleeve, offset: -0.02)
+    applyOffset(-0.01, to: nodes.rightArm, axis: \.z)
+    applyOffset(-0.01, to: nodes.rightLeg, axis: \.z)
+    applyOffset(-0.02, to: nodes.rightArmSleeve, axis: \.z)
+    applyOffset(-0.02, to: nodes.rightLegSleeve, axis: \.z)
 
     // X-axis offsets: Separate limb inner surfaces from body sides
     // When limbs swing forward/backward, their inner surfaces can intersect with body
     // Push limbs slightly outward to prevent this overlap
-    applyXOffset(to: nodes.leftLeg, offset: -0.01)
-    applyXOffset(to: nodes.leftArm, offset: -0.01)
-    applyXOffset(to: nodes.leftLegSleeve, offset: -0.01)
-    applyXOffset(to: nodes.leftArmSleeve, offset: -0.01)
+    applyOffset(-0.01, to: nodes.leftLeg, axis: \.x)
+    applyOffset(-0.01, to: nodes.leftArm, axis: \.x)
+    applyOffset(-0.01, to: nodes.leftLegSleeve, axis: \.x)
+    applyOffset(-0.01, to: nodes.leftArmSleeve, axis: \.x)
 
-    applyXOffset(to: nodes.rightLeg, offset: 0.01)
-    applyXOffset(to: nodes.rightArm, offset: 0.01)
-    applyXOffset(to: nodes.rightLegSleeve, offset: 0.01)
-    applyXOffset(to: nodes.rightArmSleeve, offset: 0.01)
+    applyOffset(0.01, to: nodes.rightLeg, axis: \.x)
+    applyOffset(0.01, to: nodes.rightArm, axis: \.x)
+    applyOffset(0.01, to: nodes.rightLegSleeve, axis: \.x)
+    applyOffset(0.01, to: nodes.rightArmSleeve, axis: \.x)
   }
 
-  /// Applies a small Z position offset to prevent Z-fighting
-  private func applyZOffset(to node: SCNNode, offset: Float) {
-    node.position.z += CGFloat(offset)
-  }
-
-  /// Applies a small X position offset to prevent Z-fighting with body
-  private func applyXOffset(to node: SCNNode, offset: Float) {
-    node.position.x += CGFloat(offset)
+  /// Applies a small position offset along the given axis to prevent Z-fighting
+  private func applyOffset(
+    _ offset: Float,
+    to node: SCNNode,
+    axis: WritableKeyPath<SCNVector3, CGFloat>
+  ) {
+    node.position[keyPath: axis] += CGFloat(offset)
   }
 
   /// Rebuild voxel-based outer layers (hat, jacket, sleeves) using a new skin image.

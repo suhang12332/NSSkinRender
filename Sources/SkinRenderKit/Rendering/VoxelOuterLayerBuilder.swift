@@ -112,9 +112,7 @@ final class VoxelOuterLayerBuilder {
     // Clear existing voxels and clean up resources
     for child in containerNode.childNodes {
       if let geometry = child.geometry {
-        for material in geometry.materials {
-          material.diffuse.contents = nil
-        }
+        geometry.clearMaterialContents()
         geometry.materials = []
       }
       child.removeFromParentNode()
